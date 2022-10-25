@@ -1,9 +1,9 @@
 #pragma once
 //RC_GAME.h
 
-#include "RC_GEOM.h"
+#include "RC_GEOM.hpp"
 #include <SDL.h>
-#include "RC_DRAW.h"
+#include "RC_DRAW.hpp"
 #include <iostream>
 float proj_screen_width = 10.0f;
 void gameloop(geom::player player, geom::line wall, Uint32* pixels, int WIDTH, int HEIGHT, float fov) {

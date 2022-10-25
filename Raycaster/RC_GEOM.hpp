@@ -1,6 +1,6 @@
 //RC_GEOM.h
 #pragma once
-#include "RC_MATH.h"
+#include "RC_MATH.hpp"
 
 namespace geom {
 	typedef enum lineLineIntersectionArgs {

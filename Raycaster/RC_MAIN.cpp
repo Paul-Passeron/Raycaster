@@ -8,9 +8,9 @@ Paul Passeron 2022
 #include <SDL.h>
 #include <iostream>
 #include <chrono>
-#include "RC_MATH.h"
-#include "RC_GEOM.h"
-#include "RC_GAME.h"
+#include "RC_MATH.hpp"
+#include "RC_GEOM.hpp"
+#include "RC_GAME.hpp"
 /*
 ================================================================
 Global variables
