@@ -133,15 +133,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="RC_GEOM.cpp" />
-    <ClCompile Include="RC_GAME.cpp" />
     <ClCompile Include="RC_MAIN.cpp" />
-    <ClCompile Include="RC_MATH.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RC_DRAW.h" />
     <ClInclude Include="RC_GEOM.h" />
     <ClInclude Include="RC_GAME.h" />
-    <ClInclude Include="RC_MAIN.h" />
     <ClInclude Include="RC_MATH.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
