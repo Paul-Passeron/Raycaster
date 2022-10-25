@@ -26,13 +26,15 @@ geom::point pWallp1;
 geom::point pWallp2;
 geom::line lWall;
 float fov = PI / 3.0;
+const float fSpeed = 10.0f;
+const float fOmega = PI/2;
 
 
 
 int main(int argc, char* args[]) {
 	const Uint8* keyState;
 	pWallp1.x = 0;
-	pWallp1.y = 2;
+	pWallp1.y = 5;
 	pWallp1.exists = true;
 	pWallp2.x = 2;
 	pWallp2.y = 2;
@@ -42,7 +44,10 @@ int main(int argc, char* args[]) {
 	pPlayer.pos.x = 0;
 	pPlayer.pos.y = 0;
 	pPlayer.pos.exists = true;
-	pPlayer.angle = PI/2;
+	pPlayer.angle = PI / 2;
+
+	//==========================
+
 	bool quit = false;
 	SDL_Event event;
 	SDL_Init(SDL_INIT_VIDEO);
@@ -54,7 +59,15 @@ int main(int argc, char* args[]) {
 	SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, WIDTH, HEIGHT);
 	//Creating an array of pixels (to draw on the screen)
 	Uint32* pixels = new Uint32[WIDTH * HEIGHT];
+	std::chrono::time_point<std::chrono::system_clock> m_tp1, m_tp2;
+
+	m_tp1 = std::chrono::system_clock::now();
+	m_tp2 = std::chrono::system_clock::now();
 	while (!quit) {
+		m_tp2 = std::chrono::system_clock::now();
+		std::chrono::duration<float> elapsedTime = m_tp2 - m_tp1;
+		m_tp1 = m_tp2;
+		float fElapsedTime = elapsedTime.count();
 		std::cout << pPlayer.angle << std::endl;
 		memset(pixels, 255, WIDTH * HEIGHT * sizeof(Uint32));
 		gameloop(pPlayer, lWall, pixels, WIDTH, HEIGHT, fov);
@@ -70,26 +83,30 @@ int main(int argc, char* args[]) {
 		if (keyState[SDL_SCANCODE_ESCAPE])
 			quit = true;
 		if (keyState[SDL_SCANCODE_Q]) {
-			pPlayer.angle -= 0.001;
+			pPlayer.angle -= fOmega*fElapsedTime;
+			float q = pPlayer.angle / PI;
+			pPlayer.angle -= ((float)((int)q)) * PI;
 		}
 		if (keyState[SDL_SCANCODE_E]) {
-			pPlayer.angle += 0.001;
+			pPlayer.angle += fOmega * fElapsedTime;
+			float q = pPlayer.angle / (2*PI);
+			pPlayer.angle -= ((float)((int)q)) * 2 * PI;
 		}
 		if (keyState[SDL_SCANCODE_W]) {
-			pPlayer.pos.x += cosf(pPlayer.angle) * 0.01;
-			pPlayer.pos.y += sinf(pPlayer.angle) * 0.01;
+			pPlayer.pos.x += cosf(pPlayer.angle) * fElapsedTime*fSpeed;
+			pPlayer.pos.y += sinf(pPlayer.angle) * fElapsedTime*fSpeed;
 		}
 		if (keyState[SDL_SCANCODE_S]) {
-			pPlayer.pos.x -= cosf(pPlayer.angle) * 0.01;
-			pPlayer.pos.y -= sinf(pPlayer.angle) * 0.01;
+			pPlayer.pos.x -= cosf(pPlayer.angle) * fElapsedTime*fSpeed;
+			pPlayer.pos.y -= sinf(pPlayer.angle) * fElapsedTime*fSpeed;
 		}
 		if (keyState[SDL_SCANCODE_D]) {
-			pPlayer.pos.x -= sinf(pPlayer.angle) * 0.01;
-			pPlayer.pos.y += cosf(pPlayer.angle) * 0.01;
+			pPlayer.pos.x -= sinf(pPlayer.angle) * fElapsedTime*fSpeed;
+			pPlayer.pos.y += cosf(pPlayer.angle) * fElapsedTime*fSpeed;
 		}
 		if (keyState[SDL_SCANCODE_A]) {
-			pPlayer.pos.x += sinf(pPlayer.angle) * 0.01;
-			pPlayer.pos.y -= cosf(pPlayer.angle) * 0.01;
+			pPlayer.pos.x += sinf(pPlayer.angle) * fElapsedTime*fSpeed;
+			pPlayer.pos.y -= cosf(pPlayer.angle) * fElapsedTime*fSpeed;
 		}
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);

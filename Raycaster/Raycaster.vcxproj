@@ -136,10 +136,10 @@
     <ClCompile Include="RC_MAIN.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RC_DRAW.h" />
-    <ClInclude Include="RC_GEOM.h" />
-    <ClInclude Include="RC_GAME.h" />
-    <ClInclude Include="RC_MATH.h" />
+    <ClInclude Include="RC_DRAW.hpp" />
+    <ClInclude Include="RC_GEOM.hpp" />
+    <ClInclude Include="RC_GAME.hpp" />
+    <ClInclude Include="RC_MATH.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -6,6 +6,7 @@
 #include "RC_DRAW.hpp"
 #include <iostream>
 float proj_screen_width = 10.0f;
+
 void gameloop(geom::player player, geom::line wall, Uint32* pixels, int WIDTH, int HEIGHT, float fov) {
 	float fWidth = (float)WIDTH;
 	float fHeight = (float)HEIGHT;
@@ -20,10 +21,9 @@ void gameloop(geom::player player, geom::line wall, Uint32* pixels, int WIDTH, i
 	p2.y = 0.5f * proj_screen_width * cos(player.angle) + player.pos.y;
 	lCamera.p1 = p1;
 	lCamera.p2 = p2;
-
-
 	for (int i = 0; i < WIDTH; i++) {
 		float ray_angle = player.angle+fov/2*((float)i)/fWidth-fov/2;
+		//float ray_angle = atanf(2 * ((float)i) * proj_screen_width / fWidth * sinf(fov / 2.0f));
 		geom::point ray_origin;
 		ray_origin.exists = true;
 		geom::point ray_end;
