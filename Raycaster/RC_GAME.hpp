@@ -1,5 +1,11 @@
+/*
+================================================================
+RayCaster Engine
+Paul Passeron 2022
+RC_GAME.hpp
+================================================================
+*/
 #pragma once
-//RC_GAME.hpp
 
 #include "RC_GEOM.hpp"
 #include "RC_DRAW.hpp"
@@ -7,58 +13,102 @@
 #include <SFML/Graphics.hpp>
 float proj_screen_width = 10.0f;
 
+
 void gameloop(geom::player player, geom::line wall, sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov) {
-	float fWidth = (float)WIDTH;
-	float fHeight = (float)HEIGHT;
-	geom::line lCamera;
-	geom::point p1;
-	geom::point p2;
-	p1.exists = true;
-	p2.exists = true;
-	p1.x =  0.5f * proj_screen_width * sin(player.angle) + player.pos.x;
-	p1.y = -0.5f * proj_screen_width * cos(player.angle) + player.pos.y;
-	p2.x = -0.5f * proj_screen_width * sin(player.angle) + player.pos.x;
-	p2.y =  0.5f * proj_screen_width * cos(player.angle) + player.pos.y;
-	lCamera.p1 = p1;
-	lCamera.p2 = p2;
+	/*
+	================================================================
+	gameloop(geom::player player, geom::line wall,
+	sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov) -> void:
+	Basically just draw the wall wall based on the fov, player pos,
+	player angle and the dimensions of the screen. Nothing fancy
+	yet, ther will be texture sampling, multiple walls (map) etc...
+	================================================================
+	*/
+	//Casting WIDTH and HEIGHT to floats once and for all instead of doing it over and over again
+	//in order to increase speed.
+	const float fWidth = (float)WIDTH;
+	const float fHeight = (float)HEIGHT;
+	//Creating the camera line, which we maybe should'nt do here since it's always the same.
+	//We should maybe pass it in as a parameter of the gameloop function.
+	geom::point p1 = geom::point(0.5f * proj_screen_width * sin(player.angle) + player.pos.x, -0.5f * proj_screen_width * cos(player.angle) + player.pos.y);
+	geom::point p2 = geom::point(-0.5f * proj_screen_width * sin(player.angle) + player.pos.x, 0.5f * proj_screen_width * cos(player.angle) + player.pos.y);
+	geom::line lCamera = geom::line(p1, p2);
+	//Looping over each row of pixel to determine the height of the wall to be displayed.
 	for (int i = 0; i < WIDTH; i++) {
+		//Calculating the angle of the ray we'll be casting.
 		float ray_angle = player.angle+fov/2*((float)i)/fWidth-fov/2;
+		//Doesn't work as intended, we get a fisheye effect.
 		//float ray_angle = atanf(2 * ((float)i) * proj_screen_width / fWidth * sinf(fov / 2.0f));
-		geom::point ray_origin;
-		ray_origin.exists = true;
-		geom::point ray_end;
-		ray_end.exists = true;
-		ray_origin.x = player.pos.x;
-		ray_origin.y = player.pos.y;
-		ray_end.x = ray_origin.x + cos(ray_angle);
-		ray_end.y = ray_origin.y + sin(ray_angle);
-		geom::line ray;
-		ray.p1 = ray_origin;
-		ray.p2 = ray_end;
+		
+		//Creating the ray emitted from the player with angle ray_angle.
+		geom::line ray = geom::line(player.pos, geom::point(player.pos.x + cos(ray_angle), player.pos.y + sin(ray_angle)));
+		//Calculates the intrsection point between our ray and the wall.
 		geom::point inter = line_line_intersection(ray, wall, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
 		float fWallHeight = 0;
 		if (inter.exists) {
 			float d_s = distance_squared(inter, player.pos);
-			if (d_s > 0.01) {
+			//To avoid division by 0.
+			if (d_s > 0.001) {
+				//we get the distance between the camera line and the point that our ray has hit on the wall.
+				//It helps avoiding the fisheye effect we could get by calculating the distance to the player.
 				float d = geom::distance_point_line(lCamera, inter);
 				fWallHeight = 1.26f * fHeight / d;
+				//Capping the maximum wall heiht to be displayed on the screen.
 				if (fWallHeight > fHeight) {
 					fWallHeight = fHeight;
 				}
+				//Drawing the line of pixel at the correct size to draw a wall.
 				for (int h = HEIGHT / 2 - (int)fWallHeight; h < (int)fWallHeight + HEIGHT / 2; h++) {
-
-					int index = get_Index(i, h, WIDTH);
-					if (index >= 0 && index < WIDTH*HEIGHT) {
+					int index = get_Index(i, h, WIDTH, true); // index of the pixel to be written in the pixels array.
+					//Checking if pixel is in bounds.
+					if (index >= 0 && index < WIDTH*HEIGHT*4) {
 						sf::Uint8 comp = 255.0 * fWallHeight / fHeight;
-						pixels[index*4] = comp;
-						pixels[index * 4+1] = comp;
-						pixels[index * 4+2] = comp;
-						pixels[index * 4+3] = (sf::Uint8)255;
+						pixels[index] = comp; // Red component
+						pixels[index+1] = 0; // Green component
+						pixels[index+2] = 0; // Blue component
+						pixels[index+3] = (sf::Uint8)255; // Alpha component
 					}
 				}
 			}
 		}
-		//std::cout << fWallHeight << std::endl;
 	}
-
 } 
+
+void handleKeyboardInput(float fElapsedTime, geom::player &pPlayer, float fOmega, float fSpeed) {
+	/*
+	================================================================
+	handleKeyboardInput(float fElapsedTime, geom::player &pPlayer,
+	float fOmega, float fSpeed) -> void:
+	Makes the player move according to his inputs, for the moment it
+	doesn't account for collisions or anything fancy.
+	================================================================
+	*/
+	//Turning left
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+		pPlayer.angle -= fOmega * fElapsedTime;
+	}
+	//Turning right
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+		pPlayer.angle += fOmega * fElapsedTime;
+	}
+	//Moving forward
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) {
+		pPlayer.pos.x += cosf(pPlayer.angle) * fElapsedTime * fSpeed;
+		pPlayer.pos.y += sinf(pPlayer.angle) * fElapsedTime * fSpeed;
+	}
+	//Moving backward
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+		pPlayer.pos.x -= cosf(pPlayer.angle) * fElapsedTime * fSpeed;
+		pPlayer.pos.y -= sinf(pPlayer.angle) * fElapsedTime * fSpeed;
+	}
+	//Strafing right
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+		pPlayer.pos.x -= sinf(pPlayer.angle) * fElapsedTime * fSpeed;
+		pPlayer.pos.y += cosf(pPlayer.angle) * fElapsedTime * fSpeed;
+	}
+	//Strafing left
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
+		pPlayer.pos.x += sinf(pPlayer.angle) * fElapsedTime * fSpeed;
+		pPlayer.pos.y -= cosf(pPlayer.angle) * fElapsedTime * fSpeed;
+	}
+}
