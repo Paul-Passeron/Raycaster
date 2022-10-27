@@ -1,11 +1,7 @@
 
-================================================================
-RayCaster Engine
-Paul Passeron 2022
-RC_GAME.hpp
-================================================================
+TODO // Raycaster Engine Paul Passeron 2022
 
-TODO:
+
 	-Have a way of creating maps
 	-Have a way of loading maps
 	-Have multiple types of walls in map
