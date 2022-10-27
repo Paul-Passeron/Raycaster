@@ -58,7 +58,7 @@ void gameloop(geom::player player, geom::line wall, sf::Uint8* pixels, int WIDTH
 				//We could have another factor which would be the size of the acutal wall and we could use
 				//that to render different walls at different heights. There is a few problems about that
 				//that I still need to wrap my head around before doing this kind of stuff
-				fWallHeight = fRatio * fHeight / d *1.4f;
+				fWallHeight = fRatio * fHeight / d *2.0f;
 				float fWallWidth = 1.0f / geom::inverse_distance(wall.p1, wall.p2);
 				float fWallWidthSample = 1.0f / geom::inverse_distance(wall.p2, inter);
 				unsigned int x; // x is the x cordinate in texture space of the sampled pixel.

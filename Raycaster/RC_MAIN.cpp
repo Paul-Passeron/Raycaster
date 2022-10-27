@@ -32,9 +32,8 @@ sf::Texture texture; // Texture that will be displayed on the screen.
 sf::Sprite sprite; // Sprite that will be displayed on the screen.
 int main()
 {
-	
 	//Declaring a test wall, will later be loaded from a file.
-	geom::line lWall = geom::line(geom::point(0, 1), geom::point(2, 1));
+	geom::line lWall = geom::line(geom::point(0, 2), geom::point(1, 2));
 	//setting the player starting angle.
 	pPlayer.angle = PI / 2;
 	//Creating the buffer that contains every pixel that will
