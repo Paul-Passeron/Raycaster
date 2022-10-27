@@ -34,7 +34,7 @@ int main()
 {
 	
 	//Declaring a test wall, will later be loaded from a file.
-	geom::line lWall = geom::line(geom::point(0, 5), geom::point(2, 2));
+	geom::line lWall = geom::line(geom::point(0, 1), geom::point(2, 1));
 	//setting the player starting angle.
 	pPlayer.angle = PI / 2;
 	//Creating the buffer that contains every pixel that will
@@ -56,6 +56,12 @@ int main()
 	icon.loadFromFile("icone.png");
 	window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 	
+	//Temporaire !!!
+	//********************
+	auto text_wall = sf::Image();
+	text_wall.loadFromFile("texture.png");
+	//********************
+
 	//Loop that stays open while the winodw is open, we put the gameplay code in here.
 	while (window.isOpen())
 	{
@@ -65,7 +71,7 @@ int main()
 		m_tp1 = m_tp2;
 		fElapsedTime = elapsedTime.count();
 		//std::cout << 1 / fElapsedTime << std::endl; //Prints the fps count to the console.
-
+		
 		//Creating an event to handle wether or not we have closed the window.
 		sf::Event event;
 		while (window.pollEvent(event))
@@ -73,11 +79,15 @@ int main()
 			if (event.type == sf::Event::Closed)
 				window.close();
 		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+			window.close();
+		}
 
 		//Reset pixels to all black.
 		memset(pixels, 0, WIDTH * HEIGHT * sizeof(sf::Color));
 		//GameLoop ie drawig every walls etc on pixels buffer
-		gameloop(pPlayer, lWall, pixels, WIDTH, HEIGHT, fov);
+		//gameloop(pPlayer, lWall, pixels, WIDTH, HEIGHT, fov);
+		gameloop(pPlayer, lWall, pixels, WIDTH, HEIGHT, fov, text_wall);
 		//Draws the pixels buffer on the screen.
 		drawScene(window, pixels, texture, sprite);
 		// Handling input (player movement)
