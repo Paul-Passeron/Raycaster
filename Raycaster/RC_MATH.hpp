@@ -29,3 +29,20 @@ float fast_inverse_square_root(float x) {
 	return y;
 }
 
+int indexBiggestElem(float* Array, int n) {
+	/*
+	================================================================
+	indexBiggestElem(float* Array) -> int:
+	returns the index of the element with biggest value in the
+	array. We use floats as it is more convenient for the overall
+	code.
+	================================================================
+	*/
+	int maxi = 0;
+	for (int i = 1; i < n; i++) {
+		if (Array[maxi] <= Array[i]) {
+			maxi = i;
+		}
+	}
+	return maxi;
+}

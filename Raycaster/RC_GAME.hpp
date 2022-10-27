@@ -14,7 +14,7 @@ RC_GAME.hpp
 float proj_screen_width = 10.0f;
 
 
-void gameloop(geom::player player, geom::line wall, sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov, sf::Image& text_wall) {
+void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov, sf::Image& text_wall, int n) {
 	/*
 	================================================================
 	gameloop(geom::player player, geom::line wall,
@@ -44,8 +44,32 @@ void gameloop(geom::player player, geom::line wall, sf::Uint8* pixels, int WIDTH
 
 		//Creating the ray emitted from the player with angle ray_angle.
 		geom::line ray = geom::line(player.pos, geom::point(player.pos.x + cos(ray_angle), player.pos.y + sin(ray_angle)));
+		//Implementing multiple walls.
+		int iWallNumber = n;
+		float* inverseDistances = new float[iWallNumber];
+		for (int iWallIndex = 0; iWallIndex < iWallNumber; iWallIndex++) {
+			//We have to calculate which wall is closest to the player for any pixel row on the screen.
+			//We'll compute the inverse distances and take the wall outputing the largest as our wall.
+			geom::line lWall = lWallArray[iWallIndex]; //That's the wall we are currently dealing with
+			// We calculate the point of intersection between the ray and this wall.
+			geom::point inter = line_line_intersection(ray, lWall, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
+			if (inter.exists) {
+				inverseDistances[iWallIndex] = geom::inverse_distance(player.pos, inter);
+			}
+			else {
+				inverseDistances[iWallIndex] = 0;
+			}
+		}
+		//Then everythong kinda is the same, we just set our old wall to the one with the biggest inverse distance
+		// It isn't optimal but it'll do for the moment.
+		// We have to calculate which index of inverseDistances holds the biggest value, we'll use
+		// a function defined in RC_MATH.hpp.
 		//Calculates the intrsection point between our ray and the wall.
-		geom::point inter = line_line_intersection(ray, wall, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
+		int iMaxIndex = indexBiggestElem(inverseDistances, n);
+		//std::cout << iMaxIndex << std::endl;
+		geom::line lWall = lWallArray[iMaxIndex]; 
+		geom::point inter = line_line_intersection(ray, lWall, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
+
 		float fWallHeight = 0;
 		if (inter.exists) {
 			float d_s = distance_squared(inter, player.pos);
@@ -59,8 +83,8 @@ void gameloop(geom::player player, geom::line wall, sf::Uint8* pixels, int WIDTH
 				//that to render different walls at different heights. There is a few problems about that
 				//that I still need to wrap my head around before doing this kind of stuff
 				fWallHeight = fRatio * fHeight / d *2.0f;
-				float fWallWidth = 1.0f / geom::inverse_distance(wall.p1, wall.p2);
-				float fWallWidthSample = 1.0f / geom::inverse_distance(wall.p2, inter);
+				float fWallWidth = 1.0f / geom::inverse_distance(lWall.p1, lWall.p2);
+				float fWallWidthSample = 1.0f / geom::inverse_distance(lWall.p2, inter);
 				unsigned int x; // x is the x cordinate in texture space of the sampled pixel.
 				//sampling the pixel on the wall (we don't divide by the size of the wall because otherwise
 				//the texture wold be stretched across the whole wall.
