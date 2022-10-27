@@ -87,12 +87,13 @@ namespace geom {
 		float t_num = (x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4);
 		float u_num = (x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2);
 		point p;
-		p.exists = false;
+		p.exists = true;
 		p.x = 0;
 		p.y = 0;
 
 		//if den = 0 then we can't calculate the ratios so the point doesn't exists.
 		if (den == 0) {
+			std::cout << "l" << std::endl;
 			p.exists = false;
 			return p;
 		}
@@ -105,9 +106,6 @@ namespace geom {
 			break;
 		case FALLS_WITHIN_SECOND_LINE_SEGMENT:
 			p.exists = 0 <= u && u <= 1 && t_num*u_num >= 0;
-			break;
-		default:
-			p.exists = false;
 			break;
 		}
 		p.x = x1 + t * (x2 - x1);

@@ -1,13 +1,13 @@
 #pragma once
-//RC_GAME.h
+//RC_GAME.hpp
 
 #include "RC_GEOM.hpp"
-#include <SDL.h>
 #include "RC_DRAW.hpp"
 #include <iostream>
+#include <SFML/Graphics.hpp>
 float proj_screen_width = 10.0f;
 
-void gameloop(geom::player player, geom::line wall, Uint32* pixels, int WIDTH, int HEIGHT, float fov) {
+void gameloop(geom::player player, geom::line wall, sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov) {
 	float fWidth = (float)WIDTH;
 	float fHeight = (float)HEIGHT;
 	geom::line lCamera;
@@ -15,10 +15,10 @@ void gameloop(geom::player player, geom::line wall, Uint32* pixels, int WIDTH, i
 	geom::point p2;
 	p1.exists = true;
 	p2.exists = true;
-	p1.x = 0.5f * proj_screen_width * sin(player.angle) + player.pos.x;
+	p1.x =  0.5f * proj_screen_width * sin(player.angle) + player.pos.x;
 	p1.y = -0.5f * proj_screen_width * cos(player.angle) + player.pos.y;
 	p2.x = -0.5f * proj_screen_width * sin(player.angle) + player.pos.x;
-	p2.y = 0.5f * proj_screen_width * cos(player.angle) + player.pos.y;
+	p2.y =  0.5f * proj_screen_width * cos(player.angle) + player.pos.y;
 	lCamera.p1 = p1;
 	lCamera.p2 = p2;
 	for (int i = 0; i < WIDTH; i++) {
@@ -48,8 +48,12 @@ void gameloop(geom::player player, geom::line wall, Uint32* pixels, int WIDTH, i
 				for (int h = HEIGHT / 2 - (int)fWallHeight; h < (int)fWallHeight + HEIGHT / 2; h++) {
 
 					int index = get_Index(i, h, WIDTH);
-					if (index >= 0 && index < WIDTH * HEIGHT) {
-						pixels[index] = 0;
+					if (index >= 0 && index < WIDTH*HEIGHT) {
+						sf::Uint8 comp = 255.0 * fWallHeight / fHeight;
+						pixels[index*4] = comp;
+						pixels[index * 4+1] = comp;
+						pixels[index * 4+2] = comp;
+						pixels[index * 4+3] = (sf::Uint8)255;
 					}
 				}
 			}

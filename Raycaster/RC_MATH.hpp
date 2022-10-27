@@ -18,7 +18,7 @@ float fast_inverse_square_root(float x) {
 	i = 0x5f3759df - (i >> 1);
 	y = *(float*)&i;
 	y = y * (threehalfs - (x2 * y * y));
-	y = y * (threehalfs - (x2 * y * y)); //Second iteration : necessary ?
+	//y = y * (threehalfs - (x2 * y * y)); //Second iteration : necessary ?
 	return y;
 }
 
