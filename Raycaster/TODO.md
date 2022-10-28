@@ -2,8 +2,7 @@
 TODO // Raycaster Engine Paul Passeron 2022
 
 
-	-Implementing some kind of pixel "smudging" s that the sampling doesn't look so bad standing far away
-from a wall.
+	-Implementing some kind of pixel "smudging" s that the sampling doesn't look so bad standing far awayfrom a wall.
 	-Have a way of creating maps // Done 
 	-Have a way of loading maps // Not really done but getting there
 	-Have multiple types of walls in map
