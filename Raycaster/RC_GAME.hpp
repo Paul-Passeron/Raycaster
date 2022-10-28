@@ -14,7 +14,7 @@ RC_GAME.hpp
 float proj_screen_width = 10.0f;
 
 
-void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov, sf::Image& text_wall, int n) {
+void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov, sf::Image& text_wall) {
 	/*
 	================================================================
 	gameloop(geom::player player, geom::line wall,
@@ -30,10 +30,11 @@ void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, in
 	const float fHeight = (float)HEIGHT;
 	const float fRatio = fWidth / fHeight;
 	const float PI = 3.14156;
+	float maxDist = 25;
 	//Creating the camera line, which we maybe should'nt do here since it's always the same.
 	//We should maybe pass it in as a parameter of the gameloop function.
-	geom::point p1 = geom::point(0.5f * proj_screen_width * cos(player.angle+PI/2) + player.pos.x, 0.5f * proj_screen_width * sin(player.angle+PI/2) + player.pos.y);
-	geom::point p2 = geom::point(0.5f * proj_screen_width * cos(player.angle-PI/2) + player.pos.x, 0.5f * proj_screen_width * sin(player.angle-PI/2) + player.pos.y);
+	geom::point p1 = geom::point(-0.5f * proj_screen_width * sin(player.angle) + player.pos.x, 0.5f * proj_screen_width * cos(player.angle) + player.pos.y);
+	geom::point p2 = geom::point(0.5f * proj_screen_width * sin(player.angle) + player.pos.x, -0.5f * proj_screen_width * cos(player.angle) + player.pos.y);
 	geom::line lCamera = geom::line(p1, p2);
 	//Looping over each row of pixel to determine the height of the wall to be displayed.
 	for (int i = 0; i < WIDTH; i++) {
@@ -45,7 +46,7 @@ void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, in
 		//Creating the ray emitted from the player with angle ray_angle.
 		geom::line ray = geom::line(player.pos, geom::point(player.pos.x + cos(ray_angle), player.pos.y + sin(ray_angle)));
 		//Implementing multiple walls.
-		int iWallNumber = n;
+		int iWallNumber = sizeof(*lWallArray);
 		float* inverseDistances = new float[iWallNumber];
 		for (int iWallIndex = 0; iWallIndex < iWallNumber; iWallIndex++) {
 			//We have to calculate which wall is closest to the player for any pixel row on the screen.
@@ -65,7 +66,7 @@ void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, in
 		// We have to calculate which index of inverseDistances holds the biggest value, we'll use
 		// a function defined in RC_MATH.hpp.
 		//Calculates the intrsection point between our ray and the wall.
-		int iMaxIndex = indexBiggestElem(inverseDistances, n);
+		int iMaxIndex = indexBiggestElem(inverseDistances, iWallNumber);
 		//std::cout << iMaxIndex << std::endl;
 		geom::line lWall = lWallArray[iMaxIndex]; 
 		geom::point inter = line_line_intersection(ray, lWall, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
@@ -74,7 +75,7 @@ void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, in
 		if (inter.exists) {
 			float d_s = distance_squared(inter, player.pos);
 			//To avoid division by 0.
-			if (d_s > 0.001) {
+			if (d_s > 0.01f) {
 				//we get the distance between the camera line and the point that our ray has hit on the wall.
 				//It helps avoiding the fisheye effect we could get by calculating the distance to the player.
 				float d = geom::distance_point_line(lCamera, inter);
@@ -90,6 +91,10 @@ void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, in
 				//the texture wold be stretched across the whole wall.
 				x = (fWallWidthSample * text_wall.getSize().x);
 				x = x % text_wall.getSize().x;
+				float fColorCoeff = maxDist / d ; //Simulating shadow based on the player distance to the wall.
+				if (fColorCoeff > 1) {
+					fColorCoeff = 1;
+				}
 				//Drawing the line of pixel at the correct size to draw a wall.
 				for (int h = (HEIGHT - (int)fWallHeight) / 2; h < ((int)fWallHeight + HEIGHT) / 2; h++) {
 					unsigned int y;// y is the y cordinate in texture space of the sampled pixel.
@@ -109,10 +114,9 @@ void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, in
 					//Checking if pixel is in bounds.
 					if (index >= 0 && index < WIDTH * HEIGHT * 4) {
 						sf::Color col = text_wall.getPixel(x, y);
-						sf::Uint8 comp = 255.0 * fWallHeight / fHeight;
-						pixels[index] = col.r; // Red component
-						pixels[index + 1] = col.g; // Green component
-						pixels[index + 2] = col.b; // Blue component
+						pixels[index] = col.r*fColorCoeff; // Red component
+						pixels[index + 1] = col.g*fColorCoeff; // Green component
+						pixels[index + 2] = col.b*fColorCoeff; // Blue component
 						pixels[index + 3] = (sf::Uint8)255; // Alpha component
 					}
 				}

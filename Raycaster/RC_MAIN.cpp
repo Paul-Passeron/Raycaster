@@ -19,12 +19,12 @@ RC_MAIN.cpp
 #include "RC_GAME.hpp"
 
 const char* TITLE = "Raycaster Engine"; //Window title
-const int WIDTH = 1920; //Window width
-const int HEIGHT = 1080; //Window height
+const int WIDTH = 320; //Window width
+const int HEIGHT = 200; //Window height
 const float PI = 3.141592653589793f; //The constant pi, used extensively in calculations.
 geom::player pPlayer; // The player variable, used during the whole gameloop.
-float fov = PI / 3.0; // The player's field of view, could become one of the player's struct field.
-const float fSpeed = 10.0f; // The speed at which the player moves (nothing fancy, no sliding / friction).
+float fov = 72.0f*PI/180.0f; // The player's field of view, could become one of the player's struct field.
+const float fSpeed = 15.0f; // The speed at which the player moves (nothing fancy, no sliding / friction).
 const float fOmega = PI / 2; // The speed at which the player can turn.
 
 
@@ -60,7 +60,7 @@ int main()
 	m_tp1 = std::chrono::system_clock::now();
 	m_tp2 = std::chrono::system_clock::now();
 	float fElapsedTime;
-
+	
 	//Loading and setting the window's icon.
 	auto icon = sf::Image{};
 	icon.loadFromFile("icone.png");
@@ -79,8 +79,9 @@ int main()
 		m_tp2 = std::chrono::system_clock::now();
 		std::chrono::duration<float> elapsedTime = m_tp2 - m_tp1;
 		m_tp1 = m_tp2;
+
 		fElapsedTime = elapsedTime.count();
-		//std::cout << 1 / fElapsedTime << std::endl; //Prints the fps count to the console.
+		std::cout << 1 / fElapsedTime << std::endl; //Prints the fps count to the console.
 		
 		//Creating an event to handle wether or not we have closed the window.
 		sf::Event event;
@@ -94,14 +95,17 @@ int main()
 		}
 
 		//Reset pixels to all black.
-		memset(pixels, 0, WIDTH * HEIGHT * sizeof(sf::Color));
+		memset(pixels, 150, WIDTH * HEIGHT * sizeof(sf::Color));
 		//GameLoop ie drawig every walls etc on pixels buffer
 		//gameloop(pPlayer, lWall, pixels, WIDTH, HEIGHT, fov);
-		gameloop(pPlayer, lWallsArray, pixels, WIDTH, HEIGHT, fov, text_wall, n);
+		gameloop(pPlayer, lWallsArray, pixels, WIDTH, HEIGHT, fov, text_wall);
 		//Draws the pixels buffer on the screen.
 		drawScene(window, pixels, texture, sprite);
 		// Handling input (player movement)
+		pPlayer.angle -= fov / 4; //It corrects some problems with plyer movement.
 		handleKeyboardInput(fElapsedTime, pPlayer, fOmega, fSpeed);
+		pPlayer.angle += fov / 4;
+
 	}
 return 0;
 }

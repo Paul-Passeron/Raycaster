@@ -40,6 +40,7 @@ int indexBiggestElem(float* Array, int n) {
 	*/
 	int maxi = 0;
 	for (int i = 1; i < n; i++) {
+		
 		if (Array[maxi] <= Array[i]) {
 			maxi = i;
 		}

@@ -2,8 +2,10 @@
 TODO // Raycaster Engine Paul Passeron 2022
 
 
-	-Have a way of creating maps
-	-Have a way of loading maps
+	-Implementing some kind of pixel "smudging" s that the sampling doesn't look so bad standing far away
+from a wall.
+	-Have a way of creating maps // Done 
+	-Have a way of loading maps // Not really done but getting there
 	-Have multiple types of walls in map
 	-Maybe some doors, etc
 	-Billboard perspective for mobs, items and other objects as plants, pillars...
@@ -17,3 +19,6 @@ TODO // Raycaster Engine Paul Passeron 2022
 	-Make some test maps
 	-Jump ??? (maybe not)
 	
+
+For multiple wall sizes, we should have the wall start at an height independent of the wall height
+(not centered on the screen) because if we don't, bigger walls' starts would be lower than smaller walls' starts. 
