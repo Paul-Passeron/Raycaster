@@ -14,7 +14,61 @@ RC_GAME.hpp
 float proj_screen_width = 10.0f;
 
 
-void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov, sf::Image& text_wall) {
+void vPlotPixel(sf::Uint8*& pixels, float fColorCoeff, sf::Color& col, int i, int h, int WIDTH, int HEIGHT) {
+	int index = get_Index(i, h, WIDTH, true); // index of the pixel to be written in the pixels array.
+	//Checking if pixel is in bounds.
+	
+	if (index >= 0 && index < HEIGHT*WIDTH*4 && col.a != 0) {
+		pixels[index] = col.r * fColorCoeff; // Red component
+		pixels[index + 1] = col.g * fColorCoeff; // Green component
+		pixels[index + 2] = col.b * fColorCoeff; // Blue component
+		pixels[index + 3] = 255; // Alpha component
+	}
+}
+
+
+void drawObjectLine(float fWallHeight, float fHeight, sf::Image& text_wall, float fColorCoeff, int x, int i, sf::Uint8*& pixels, int WIDTH) {
+	/*
+	================================================================
+	drawObjectLine(float fWallHeight, float fHeight,
+	sf::Image& text_wall, float fColorCoeff, int x, int i,
+	sf::Uint8*& pixels, int WIDTH) -> void:
+	Writes the right pixel slice of text_wall to the screen. It is
+	currently used exclusevly to draw walls but will soon be used
+	to draw objets, items, ennemies...
+	================================================================
+	*/
+	int HEIGHT = (int)fHeight;
+	for (int h = (int)(fHeight - fWallHeight) / 2; h < (int)(fWallHeight + fHeight) / 2; h++) {
+		unsigned int y;// y is the y cordinate in texture space of the sampled pixel.
+		//Calculating the sample value of the pixel (a float number between 0 and 1
+		//indicating how high on the wall we are).
+		float fWallHeightSample = fWallHeight / 2 - fHeight / 2 + h;
+		//Calculating the y value associated with the sampled float.
+		y = (fWallHeightSample / fWallHeight) * text_wall.getSize().y;
+		//Making sure the pixel is within boundaries.
+		if (y < 0) {
+			y = 0;
+		}
+		if (y >= text_wall.getSize().y) {
+			y = text_wall.getSize().y - 1;
+		}
+		
+		sf::Color col = text_wall.getPixel(x, y);
+		vPlotPixel(pixels, fColorCoeff, col, i, h, WIDTH, HEIGHT);
+	}
+}
+
+unsigned int iCalculateXSample(sf::Image& text, geom::line lWall, geom::point inter) {
+	unsigned int x;
+	float fWallWidthSample = 1.0f / geom::inverse_distance(lWall.p2, inter);
+	x = (fWallWidthSample * text.getSize().x);
+	// It isn't equal to 0 because fWallWidthSample was a float so the result of the last line isn't necesarily a multiple of text.getSize().x.
+	return x % text.getSize().x;
+}
+
+
+void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* &pixels, int WIDTH, int HEIGHT, float fov, sf::Image& text_wall) {
 	/*
 	================================================================
 	gameloop(geom::player player, geom::line wall,
@@ -42,9 +96,10 @@ void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, in
 		float ray_angle = player.angle + fov / 2 * ((float)i) / fWidth - fov / 2;
 		//Doesn't work as intended, we get a fisheye effect.
 		//float ray_angle = atanf(2 * ((float)i) * proj_screen_width / fWidth * sinf(fov / 2.0f));
-
+		
 		//Creating the ray emitted from the player with angle ray_angle.
 		geom::line ray = geom::line(player.pos, geom::point(player.pos.x + cos(ray_angle), player.pos.y + sin(ray_angle)));
+
 		//Implementing multiple walls.
 		int iWallNumber = sizeof(*lWallArray);
 		float* inverseDistances = new float[iWallNumber];
@@ -83,45 +138,14 @@ void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* pixels, in
 				//We could have another factor which would be the size of the acutal wall and we could use
 				//that to render different walls at different heights. There is a few problems about that
 				//that I still need to wrap my head around before doing this kind of stuff
-				fWallHeight = fRatio * fHeight / d *2.0f;
-				float fWallWidth = 1.0f / geom::inverse_distance(lWall.p1, lWall.p2);
-				float fWallWidthSample = 1.0f / geom::inverse_distance(lWall.p2, inter);
-				unsigned int x; // x is the x cordinate in texture space of the sampled pixel.
-				//sampling the pixel on the wall (we don't divide by the size of the wall because otherwise
-				//the texture wold be stretched across the whole wall.
-				x = (fWallWidthSample * text_wall.getSize().x);
-				x = x % text_wall.getSize().x;
+				fWallHeight = fRatio * fHeight / d *1.5f;
 				float fColorCoeff = maxDist / d ; //Simulating shadow based on the player distance to the wall.
 				if (fColorCoeff > 1) {
 					fColorCoeff = 1;
 				}
-				//Drawing the line of pixel at the correct size to draw a wall.
-				for (int h = (HEIGHT - (int)fWallHeight) / 2; h < ((int)fWallHeight + HEIGHT) / 2; h++) {
-					unsigned int y;// y is the y cordinate in texture space of the sampled pixel.
-					//Calculating the sample value of the pixel (a float number between 0 and 1
-					//indicating how high on the wall we are).
-					float fWallHeightSample = fWallHeight / 2 - fHeight / 2 + h;
-					//Calculating the y value associated with the sampled float.
-					y = (fWallHeightSample / fWallHeight) * text_wall.getSize().y;
-					//Making sure the pixel is within boundaries.
-					if (y < 0) {
-						y = 0;
-					}
-					if (y >= text_wall.getSize().y) {
-						y = text_wall.getSize().y - 1;
-					}
-					int index = get_Index(i, h, WIDTH, true); // index of the pixel to be written in the pixels array.
-					//Checking if pixel is in bounds.
-					if (index >= 0 && index < WIDTH * HEIGHT * 4) {
-						sf::Color col = text_wall.getPixel(x, y);
-						pixels[index] = col.r*fColorCoeff; // Red component
-						pixels[index + 1] = col.g*fColorCoeff; // Green component
-						pixels[index + 2] = col.b*fColorCoeff; // Blue component
-						pixels[index + 3] = (sf::Uint8)255; // Alpha component
-					}
-				}
+				//Drawing the line of pixel at the correct size to draw a wall. (Or soon a sprite...)
+				drawObjectLine(fWallHeight, fHeight, text_wall, fColorCoeff, iCalculateXSample(text_wall, lWall, inter), i, pixels, WIDTH);
 			}
-
 		}
 	}
 }
