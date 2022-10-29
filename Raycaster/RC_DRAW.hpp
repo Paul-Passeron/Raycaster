@@ -167,8 +167,8 @@ void vDrawLoop(rc::Scene sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWal
 		float fItemInvDistNaive = fItemInvDistances[iMaxItemIndex];
 		float fWallInvDistNaive = fWallInvDistances[iMaxWallIndex];
 
-		float fItemColorCoeff = fMaxDist / fItemDist;
-		float fWallColorCoeff = fMaxDist / fWallDist;
+		float fItemColorCoeff = fMaxDist / fItemDist/2;
+		float fWallColorCoeff = fMaxDist / fWallDist/2;
 
 		sf::Image iItemText = iItem.iGetTexture();
 		sf::Image iWallText = wWall.iGetTexture();

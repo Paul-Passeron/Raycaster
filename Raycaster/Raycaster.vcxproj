@@ -150,7 +150,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="RC_MAP.rcmap" />
-    <None Include="RC_MAPTEMPLATE.rcmap" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

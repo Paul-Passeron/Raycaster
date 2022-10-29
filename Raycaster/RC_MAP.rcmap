@@ -9,8 +9,11 @@ RC_MAP.rcmap
 
 
 #WBEGIN
-0 0 10 1 0
-0 0 4 12 0
+0 0 0 25 0
+#:Comment lalala
+0 25 25 25 0
+25 25 25 0 0
+25 0 0 0 0
 #WEND
 
 #IBEGIN
@@ -21,3 +24,4 @@ RC_MAP.rcmap
 #PBEGIN
 7.2 5.4
 #PEND
+
