@@ -93,11 +93,45 @@ unsigned int iCalculateXSample(sf::Image text, geom::line lWall, geom::point int
 	// It isn't equal to 0 because fWallWidthSample was a float so the result of the last line isn't necesarily a multiple of text.getSize().x.
 	return x % text.getSize().x;
 }
+
+
 geom::line lGetBillboarLine(rc::Item iItem, rc::Player pPlayer) {
 	geom::point pP1 = geom::point(iItem.pGetPos().x - 0.5*iItem.fGetSize() * pPlayer.fGetSinAngle(), iItem.pGetPos().y + 0.5*iItem.fGetSize() * pPlayer.fGetCosAngle());
 	geom::point pP2 = geom::point(iItem.pGetPos().x + 0.5*iItem.fGetSize() * pPlayer.fGetSinAngle(), iItem.pGetPos().y - 0.5*iItem.fGetSize() * pPlayer.fGetCosAngle());
 	return geom::line(pP1, pP2);
+
 }
+
+int iFindBiggestInvDistIndex(std::vector<rc::Wall> wWalls, rc::Player pPlayer, geom::line lRay, float*& fWallInvDistances) {
+	int iWallsNumber = wWalls.size();
+	for (int iWallIndex = 0; iWallIndex < iWallsNumber; iWallIndex++) {
+		rc::Wall wWall = wWalls[iWallIndex];
+		geom::point pInter = geom::line_line_intersection(lRay, wWall.lGetWall(), geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
+		float fInvDist = 0;
+		if (pInter.exists) {
+			fInvDist = geom::inverse_distance(pPlayer.pGetPos(), pInter);
+		}
+		fWallInvDistances[iWallIndex] = fInvDist;
+	}
+	return indexBiggestElem(fWallInvDistances, iWallsNumber);
+}
+
+int iFindBiggestInvDistIndex(std::vector<rc::Item> iItems, rc::Player pPlayer, geom::line lRay, float*&fItemInvDistances) {
+	int iItemsNumber = iItems.size();
+	for (int iItemIndex = 0; iItemIndex < iItemsNumber; iItemIndex++) {
+		rc::Item iItem = iItems[iItemIndex];
+
+		geom::line lBillboardLine = lGetBillboarLine(iItem, pPlayer);
+		geom::point inter = geom::line_line_intersection(lRay, lBillboardLine, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
+		float fInvDist = 0;
+		if (inter.exists) {
+			fInvDist = geom::inverse_distance(pPlayer.pGetPos(), inter);
+		}
+		fItemInvDistances[iItemIndex] = fInvDist;
+	}
+	return indexBiggestElem(fItemInvDistances, iItemsNumber);
+}
+
 void vDrawLoop(rc::Scene sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWalls, std::vector<rc::Item> iItems, sf::Uint8*& pixels) {
 	float fWidth = (float)sScene.iGetWidth();
 	float fHeight = (float)sScene.iGetHeight();
@@ -113,29 +147,8 @@ void vDrawLoop(rc::Scene sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWal
 		float fCosRayAngle = cosf(fRayAngle);
 		float fSinRayAngle = sinf(fRayAngle);
 		geom::line lRay = geom::line(pPlayer.pGetPos(), geom::point(pPlayer.pGetPos().x + fCosRayAngle, pPlayer.pGetPos().y + fSinRayAngle));
-		for (int iWallIndex = 0; iWallIndex < iWallsNumber; iWallIndex++) {
-			rc::Wall wWall = wWalls[iWallIndex];
-			geom::point pInter = geom::line_line_intersection(lRay, wWall.lGetWall(), geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
-			float fInvDist = 0;
-			if (pInter.exists) {
-				fInvDist = geom::inverse_distance(pPlayer.pGetPos(), pInter);
-			}
-			fWallInvDistances[iWallIndex] = fInvDist;
-		}
-		for (int iItemIndex = 0; iItemIndex < iItemsNumber; iItemIndex++) {
-			rc::Item iItem = iItems[iItemIndex];
-			
-			geom::line lBillboardLine = lGetBillboarLine(iItem, pPlayer);
-			geom::point inter = geom::line_line_intersection(lRay, lBillboardLine, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
-			float fInvDist = 0;
-			if (inter.exists) {
-				fInvDist = geom::inverse_distance(pPlayer.pGetPos(), inter);
-			}
-			fItemInvDistances[iItemIndex] = fInvDist;
-		}
-		int iMaxWallIndex = indexBiggestElem(fWallInvDistances, iWallsNumber);
-		int iMaxItemIndex = indexBiggestElem(fItemInvDistances, iItemsNumber);
-
+		int iMaxWallIndex = iFindBiggestInvDistIndex(wWalls, pPlayer, lRay, fWallInvDistances);
+		int iMaxItemIndex = iFindBiggestInvDistIndex(iItems, pPlayer, lRay, fItemInvDistances);
 		rc::Wall wWall = wWalls[iMaxWallIndex];
 		rc::Item iItem = iItems[iMaxItemIndex];
 
@@ -149,7 +162,7 @@ void vDrawLoop(rc::Scene sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWal
 		//float fItemDist = geom::distance_point_line(pPlayer.lGetCamera(), pWallInter);
 		float fItemDist = geom::inverse_distance(pPlayer.pGetPos(), pItemInter);
 		float fItemRatio = iItem.fGetSize() * iItem.iGetTexture().getSize().y / iItem.iGetTexture().getSize().x;
-		float fItemHeight = fRatio * fHeight * fItemDist*fItemRatio;
+		float fItemHeight = fRatio * fHeight * fItemDist;
 
 		float fItemInvDistNaive = fItemInvDistances[iMaxItemIndex];
 		float fWallInvDistNaive = fWallInvDistances[iMaxWallIndex];

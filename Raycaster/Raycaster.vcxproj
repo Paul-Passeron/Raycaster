@@ -145,7 +145,12 @@
     <ClInclude Include="RC_DRAW.hpp" />
     <ClInclude Include="RC_GEOM.hpp" />
     <ClInclude Include="RC_GAME.hpp" />
+    <ClInclude Include="RC_MAPLOADER.hpp" />
     <ClInclude Include="RC_MATH.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RC_MAP.rcmap" />
+    <None Include="RC_MAPTEMPLATE.rcmap" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

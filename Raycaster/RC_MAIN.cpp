@@ -18,6 +18,7 @@ RC_MAIN.cpp
 #include "RC_GEOM.hpp"
 #include "RC_GAME.hpp"
 #include "RC_GAMEOBJECT.hpp"
+#include "RC_MAPLOADER.hpp"
 
 const char* TITLE = "Raycaster Engine"; //Window title
 const int WIDTH = 320; //Window width
@@ -79,17 +80,22 @@ int main()
 {
 	sf::Image iWallText;
 	iWallText.loadFromFile("texture.png");
-
-	std::vector<rc::Wall> wWalls = { rc::Wall(iWallText, geom::line(geom::point(19.0, 15.6666666667), geom::point(72.5, 9.66666666667))),rc::Wall(iWallText, geom::line(geom::point(72.5, 9.66666666667), geom::point(82.1666666667, 38.6666666667))),rc::Wall(iWallText, geom::line(geom::point(82.1666666667, 38.6666666667), geom::point(68.3333333333, 69.8333333333))),rc::Wall(iWallText, geom::line(geom::point(68.3333333333, 69.8333333333), geom::point(35.5, 72.3333333333))),rc::Wall(iWallText, geom::line(geom::point(35.5, 72.3333333333), geom::point(46.3333333333, 39.1666666667))),rc::Wall(iWallText, geom::line(geom::point(46.3333333333, 39.1666666667), geom::point(29.0, 47.1666666667))),rc::Wall(iWallText, geom::line(geom::point(29.0, 47.1666666667), geom::point(30.1666666667, 60.0))),rc::Wall(iWallText, geom::line(geom::point(30.1666666667, 60.0), geom::point(6.33333333333, 53.1666666667))),rc::Wall(iWallText, geom::line(geom::point(6.33333333333, 53.1666666667), geom::point(11.5, 30.1666666667))),rc::Wall(iWallText, geom::line(geom::point(11.5, 30.1666666667), geom::point(19.0, 15.6666666667)))
-	};
-
 	sf::Image iItemText;
 	iItemText.loadFromFile("item0.png");
-
-	std::vector<rc::Item> iItems = {rc::Item(geom::point(20, 20), iItemText, 1)};
-
-
+	sf::Image* Textures = new sf::Image[2];
+	Textures[0] = iWallText;
+	Textures[1] = iItemText;
+	std::vector<rc::Wall> wWalls;
+	std::vector<rc::Item> iItems;
 	rc::Player pPlayer = rc::Player(geom::point(0, 0), sf::Image(), 0.0f, fov, geom::line());
+	vParseFile(Textures, "RC_MAP.rcmap", pPlayer, wWalls, iItems);
+	delete[] Textures;
+	//std::vector<rc::Wall> wWalls = { rc::Wall(iWallText, geom::line(geom::point(19.0, 15.6666666667), geom::point(72.5, 9.66666666667))),rc::Wall(iWallText, geom::line(geom::point(72.5, 9.66666666667), geom::point(82.1666666667, 38.6666666667))),rc::Wall(iWallText, geom::line(geom::point(82.1666666667, 38.6666666667), geom::point(68.3333333333, 69.8333333333))),rc::Wall(iWallText, geom::line(geom::point(68.3333333333, 69.8333333333), geom::point(35.5, 72.3333333333))),rc::Wall(iWallText, geom::line(geom::point(35.5, 72.3333333333), geom::point(46.3333333333, 39.1666666667))),rc::Wall(iWallText, geom::line(geom::point(46.3333333333, 39.1666666667), geom::point(29.0, 47.1666666667))),rc::Wall(iWallText, geom::line(geom::point(29.0, 47.1666666667), geom::point(30.1666666667, 60.0))),rc::Wall(iWallText, geom::line(geom::point(30.1666666667, 60.0), geom::point(6.33333333333, 53.1666666667))),rc::Wall(iWallText, geom::line(geom::point(6.33333333333, 53.1666666667), geom::point(11.5, 30.1666666667))),rc::Wall(iWallText, geom::line(geom::point(11.5, 30.1666666667), geom::point(19.0, 15.6666666667)))};
+
+	
+
+
+
 	
 
 	//Declaring a test wall, will later be loaded from a file.
@@ -122,7 +128,6 @@ int main()
 		geom::point pP2 = geom::point(0.5f * proj_screen_width * pPlayer.fGetSinAngle() + pPlayer.pGetPos().x, -0.5f * proj_screen_width * pPlayer.fGetCosAngle() + pPlayer.pGetPos().y);
 		geom::line lCamera = geom::line(pP1, pP2);
 		pPlayer.vSetCamera(lCamera);
-		std::cout << pPlayer.lGetCamera().p1.x << std::endl;
 		//Calcultating the elapsed time between the previous frame and this one.
 		m_tp2 = std::chrono::system_clock::now();
 		std::chrono::duration<float> elapsedTime = m_tp2 - m_tp1;
@@ -130,7 +135,6 @@ int main()
 
 		fElapsedTime = elapsedTime.count();
 		//std::cout << 1 / fElapsedTime << std::endl; //Prints the fps count to the console.
-		std::cout << pPlayer.pGetPos().x << std::endl;
 		//Creating an event to handle wether or not we have closed the window.
 		sf::Event event;
 		while (window.pollEvent(event))

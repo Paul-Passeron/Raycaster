@@ -35,5 +35,12 @@
     <ClInclude Include="RC_GAMEOBJECT.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="RC_MAPLOADER.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RC_MAPTEMPLATE.rcmap" />
+    <None Include="RC_MAP.rcmap" />
   </ItemGroup>
 </Project>
