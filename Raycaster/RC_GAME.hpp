@@ -11,146 +11,11 @@ RC_GAME.hpp
 #include "RC_DRAW.hpp"
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include "RC_GAMEOBJECT.hpp"
 float proj_screen_width = 10.0f;
 
 
-void vPlotPixel(sf::Uint8*& pixels, float fColorCoeff, sf::Color& col, int i, int h, int WIDTH, int HEIGHT) {
-	int index = get_Index(i, h, WIDTH, true); // index of the pixel to be written in the pixels array.
-	//Checking if pixel is in bounds.
-	
-	if (index >= 0 && index < HEIGHT*WIDTH*4 && col.a != 0) {
-		pixels[index] = col.r * fColorCoeff; // Red component
-		pixels[index + 1] = col.g * fColorCoeff; // Green component
-		pixels[index + 2] = col.b * fColorCoeff; // Blue component
-		pixels[index + 3] = 255; // Alpha component
-	}
-}
-
-
-void drawObjectLine(float fWallHeight, float fHeight, sf::Image& text_wall, float fColorCoeff, int x, int i, sf::Uint8*& pixels, int WIDTH) {
-	/*
-	================================================================
-	drawObjectLine(float fWallHeight, float fHeight,
-	sf::Image& text_wall, float fColorCoeff, int x, int i,
-	sf::Uint8*& pixels, int WIDTH) -> void:
-	Writes the right pixel slice of text_wall to the screen. It is
-	currently used exclusevly to draw walls but will soon be used
-	to draw objets, items, ennemies...
-	================================================================
-	*/
-	int HEIGHT = (int)fHeight;
-	for (int h = (int)(fHeight - fWallHeight) / 2; h < (int)(fWallHeight + fHeight) / 2; h++) {
-		unsigned int y;// y is the y cordinate in texture space of the sampled pixel.
-		//Calculating the sample value of the pixel (a float number between 0 and 1
-		//indicating how high on the wall we are).
-		float fWallHeightSample = fWallHeight / 2 - fHeight / 2 + h;
-		//Calculating the y value associated with the sampled float.
-		y = (fWallHeightSample / fWallHeight) * text_wall.getSize().y;
-		//Making sure the pixel is within boundaries.
-		if (y < 0) {
-			y = 0;
-		}
-		if (y >= text_wall.getSize().y) {
-			y = text_wall.getSize().y - 1;
-		}
-		
-		sf::Color col = text_wall.getPixel(x, y);
-		vPlotPixel(pixels, fColorCoeff, col, i, h, WIDTH, HEIGHT);
-	}
-}
-
-unsigned int iCalculateXSample(sf::Image& text, geom::line lWall, geom::point inter) {
-	unsigned int x;
-	float fWallWidthSample = 1.0f / geom::inverse_distance(lWall.p2, inter);
-	x = (fWallWidthSample * text.getSize().x);
-	// It isn't equal to 0 because fWallWidthSample was a float so the result of the last line isn't necesarily a multiple of text.getSize().x.
-	return x % text.getSize().x;
-}
-
-
-void gameloop(geom::player player, geom::line* lWallArray, sf::Uint8* &pixels, int WIDTH, int HEIGHT, float fov, sf::Image& text_wall) {
-	/*
-	================================================================
-	gameloop(geom::player player, geom::line wall,
-	sf::Uint8* pixels, int WIDTH, int HEIGHT, float fov) -> void:
-	Basically just draw the wall wall based on the fov, player pos,
-	player angle and the dimensions of the screen. Nothing fancy
-	yet, ther will be texture sampling, multiple walls (map) etc...
-	================================================================
-	*/
-	//Casting WIDTH and HEIGHT to floats once and for all instead of doing it over and over again
-	//in order to increase speed.
-	const float fWidth = (float)WIDTH;
-	const float fHeight = (float)HEIGHT;
-	const float fRatio = fWidth / fHeight;
-	const float PI = 3.14156;
-	float maxDist = 25;
-	//Creating the camera line, which we maybe should'nt do here since it's always the same.
-	//We should maybe pass it in as a parameter of the gameloop function.
-	geom::point p1 = geom::point(-0.5f * proj_screen_width * sin(player.angle) + player.pos.x, 0.5f * proj_screen_width * cos(player.angle) + player.pos.y);
-	geom::point p2 = geom::point(0.5f * proj_screen_width * sin(player.angle) + player.pos.x, -0.5f * proj_screen_width * cos(player.angle) + player.pos.y);
-	geom::line lCamera = geom::line(p1, p2);
-	//Looping over each row of pixel to determine the height of the wall to be displayed.
-	for (int i = 0; i < WIDTH; i++) {
-		//Calculating the angle of the ray we'll be casting.
-		float ray_angle = player.angle + fov / 2 * ((float)i) / fWidth - fov / 2;
-		//Doesn't work as intended, we get a fisheye effect.
-		//float ray_angle = atanf(2 * ((float)i) * proj_screen_width / fWidth * sinf(fov / 2.0f));
-		
-		//Creating the ray emitted from the player with angle ray_angle.
-		geom::line ray = geom::line(player.pos, geom::point(player.pos.x + cos(ray_angle), player.pos.y + sin(ray_angle)));
-
-		//Implementing multiple walls.
-		int iWallNumber = sizeof(*lWallArray);
-		float* inverseDistances = new float[iWallNumber];
-		for (int iWallIndex = 0; iWallIndex < iWallNumber; iWallIndex++) {
-			//We have to calculate which wall is closest to the player for any pixel row on the screen.
-			//We'll compute the inverse distances and take the wall outputing the largest as our wall.
-			geom::line lWall = lWallArray[iWallIndex]; //That's the wall we are currently dealing with
-			// We calculate the point of intersection between the ray and this wall.
-			geom::point inter = line_line_intersection(ray, lWall, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
-			if (inter.exists) {
-				inverseDistances[iWallIndex] = geom::inverse_distance(player.pos, inter);
-			}
-			else {
-				inverseDistances[iWallIndex] = 0;
-			}
-		}
-		//Then everythong kinda is the same, we just set our old wall to the one with the biggest inverse distance
-		// It isn't optimal but it'll do for the moment.
-		// We have to calculate which index of inverseDistances holds the biggest value, we'll use
-		// a function defined in RC_MATH.hpp.
-		//Calculates the intrsection point between our ray and the wall.
-		int iMaxIndex = indexBiggestElem(inverseDistances, iWallNumber);
-		//std::cout << iMaxIndex << std::endl;
-		geom::line lWall = lWallArray[iMaxIndex]; 
-		geom::point inter = line_line_intersection(ray, lWall, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
-
-		float fWallHeight = 0;
-		if (inter.exists) {
-			float d_s = distance_squared(inter, player.pos);
-			//To avoid division by 0.
-			if (d_s > 0.01f) {
-				//we get the distance between the camera line and the point that our ray has hit on the wall.
-				//It helps avoiding the fisheye effect we could get by calculating the distance to the player.
-				float d = geom::distance_point_line(lCamera, inter);
-				//Calculating the height of the wall to be displayed on screen (the actual one).
-				//We could have another factor which would be the size of the acutal wall and we could use
-				//that to render different walls at different heights. There is a few problems about that
-				//that I still need to wrap my head around before doing this kind of stuff
-				fWallHeight = fRatio * fHeight / d *1.5f;
-				float fColorCoeff = maxDist / d ; //Simulating shadow based on the player distance to the wall.
-				if (fColorCoeff > 1) {
-					fColorCoeff = 1;
-				}
-				//Drawing the line of pixel at the correct size to draw a wall. (Or soon a sprite...)
-				drawObjectLine(fWallHeight, fHeight, text_wall, fColorCoeff, iCalculateXSample(text_wall, lWall, inter), i, pixels, WIDTH);
-			}
-		}
-	}
-}
-
-void handleKeyboardInput(float fElapsedTime, geom::player& pPlayer, float fOmega, float fSpeed) {
+void handleKeyboardInput(float fElapsedTime, rc::Player& pPlayer, float fOmega, float fSpeed) {
 	/*
 	================================================================
 	handleKeyboardInput(float fElapsedTime, geom::player &pPlayer,
@@ -161,31 +26,39 @@ void handleKeyboardInput(float fElapsedTime, geom::player& pPlayer, float fOmega
 	*/
 	//Turning left
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-		pPlayer.angle -= fOmega * fElapsedTime;
+		pPlayer.vSetAngle(pPlayer.fGetAngle() - fOmega * fElapsedTime);
 	}
 	//Turning right
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
-		pPlayer.angle += fOmega * fElapsedTime;
+		pPlayer.vSetAngle(pPlayer.fGetAngle() + fOmega * fElapsedTime);
 	}
 	//Moving forward
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) {
-		pPlayer.pos.x += cosf(pPlayer.angle) * fElapsedTime * fSpeed;
-		pPlayer.pos.y += sinf(pPlayer.angle) * fElapsedTime * fSpeed;
+		geom::point pP;
+		pP.x = pPlayer.pGetPos().x + pPlayer.fGetCosAngle() * fElapsedTime * fSpeed;
+		pP.y = pPlayer.pGetPos().y + pPlayer.fGetSinAngle() * fElapsedTime * fSpeed;
+		pPlayer.vSetPos(pP);
 	}
 	//Moving backward
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-		pPlayer.pos.x -= cosf(pPlayer.angle) * fElapsedTime * fSpeed;
-		pPlayer.pos.y -= sinf(pPlayer.angle) * fElapsedTime * fSpeed;
+		geom::point pP;
+		pP.x = pPlayer.pGetPos().x - cosf(pPlayer.fGetAngle()) * fElapsedTime * fSpeed;
+		pP.y = pPlayer.pGetPos().y - sinf(pPlayer.fGetAngle()) * fElapsedTime * fSpeed;
+		pPlayer.vSetPos(pP);
 	}
 	//Strafing right
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-		pPlayer.pos.x -= sinf(pPlayer.angle) * fElapsedTime * fSpeed;
-		pPlayer.pos.y += cosf(pPlayer.angle) * fElapsedTime * fSpeed;
+		geom::point pP;
+		pP.x = pPlayer.pGetPos().x - sinf(pPlayer.fGetAngle()) * fElapsedTime * fSpeed;
+		pP.y = pPlayer.pGetPos().y + cosf(pPlayer.fGetAngle()) * fElapsedTime * fSpeed;
+		pPlayer.vSetPos(pP);
 	}
 	//Strafing left
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
-		pPlayer.pos.x += sinf(pPlayer.angle) * fElapsedTime * fSpeed;
-		pPlayer.pos.y -= cosf(pPlayer.angle) * fElapsedTime * fSpeed;
+		geom::point pP;
+		pP.x = pPlayer.pGetPos().x + sinf(pPlayer.fGetAngle()) * fElapsedTime * fSpeed;
+		pP.y = pPlayer.pGetPos().y - cosf(pPlayer.fGetAngle()) * fElapsedTime * fSpeed;
+		pPlayer.vSetPos(pP);
 	}
 	
 }

@@ -47,3 +47,21 @@ int indexBiggestElem(float* Array, int n) {
 	}
 	return maxi;
 }
+
+float min(float a, float b) {
+	if (a < b) {
+		return a;
+	}
+	return b;
+}
+
+float max(float a, float b) {
+	return a + b - min(a, b);
+}
+
+float min(float a, float b, float c, float d) {
+	if (a > b && a > c && a > d) { return a; }
+	if (b > a && b > c && b > d) { return b; }
+	if (c > a && c > b && c > d) { return c; }
+	return d;
+}

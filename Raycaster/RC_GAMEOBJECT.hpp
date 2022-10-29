@@ -13,8 +13,8 @@ RC_GAMEOBJECT.hpp
 namespace rc {
 	class GameObject {
 	private:
-		geom::point pPos;
-		sf::Image iTexture;
+		geom::point pPos = geom::point();
+		sf::Image iTexture = sf::Image();
 	public:
 		void vSetPos(geom::point pPos_) {
 			pPos = pPos_;
@@ -35,10 +35,8 @@ namespace rc {
 		GameObject(geom::point pPos_) {
 			vSetPos(pPos_);
 		}
-		GameObject() {
-			geom::point pPos_ = geom::point();
-			GameObject(pPos_);
-		}
+		GameObject(){}
+		
 	};
 
 	class Wall : public GameObject {
@@ -58,15 +56,18 @@ namespace rc {
 		Wall(geom::point pPos_, geom::line lL) : GameObject(pPos_) {
 			vSetWall(lL);
 		}
+		Wall(sf::Image& iTexture_, geom::line lL) : GameObject(geom::point(), iTexture_) {
+			vSetWall(lL);
+
+		}
 		Wall(geom::line lL) {
 			vSetWall(lL);
 		}
 		Wall() {
-			geom::line lL = geom::line();
-			Wall(lL);
+			vSetWall(geom::line());
 		}
 	};
-
+	//Need to add Interactable wall class.
 	class Entity : public GameObject {
 	private:
 		float fAngle;
@@ -126,7 +127,7 @@ namespace rc {
 		geom::line lGetCamera() {
 			return lCamera;
 		}
-		Player(geom::point pP, sf::Image& iTexture_, float fAngle_, float fFov_, geom::line lL) : Entity(pP, iTexture_, 0, fAngle_) {
+		Player(geom::point pP, sf::Image iTexture_, float fAngle_, float fFov_, geom::line lL) : Entity(pP, iTexture_, 0, fAngle_) {
 			vSetFov(fFov_);
 			vSetCamera(lL);
 		}
@@ -191,4 +192,39 @@ namespace rc {
 		}
 	};
 	//Decoration is just an Item that isn't collectible -> Decoration is just Item.
+
+	class Scene {
+	private:
+		int iWidth;
+		int iHeight;
+		const char* sTitle;
+	public:
+		void vSetWidth(int x) {
+			iWidth = x;
+		}
+		void vSetHeight(int x) {
+			iHeight = x;
+		}
+		void vSetTitle(const char* s) {
+			sTitle = s;
+		}
+		int iGetWidth() {
+			return iWidth;
+		}
+		int iGetHeight() {
+			return iHeight;
+		}
+		const char* sGetTitle() {
+			return sTitle;
+		}
+		Scene(int w, int h, const char* s) {
+			vSetHeight(h);
+			vSetWidth(w);
+			vSetTitle(s);
+		}
+		Scene() {
+			const char* s = "";
+			Scene(600, 600, "ss");
+		}
+	};
 }
