@@ -13,6 +13,7 @@ RC_MAIN.cpp
 
 #include <iostream>
 #include <chrono>
+#include <algorithm>
 
 #include "RC_MATH.hpp"
 #include "RC_GEOM.hpp"
@@ -35,6 +36,7 @@ sf::Sprite sprite; // Sprite that will be displayed on the screen.
 
 int main()
 {
+
 	sf::Image iWallText;
 	iWallText.loadFromFile("texture.png");
 	sf::Image iItemText;
@@ -46,6 +48,7 @@ int main()
 	std::vector<rc::Item> iItems;
 	rc::Player pPlayer = rc::Player(geom::point(0, 0), sf::Image(), 0.0f, fov, geom::line());
 	vParseFile(Textures, "RC_MAP.rcmap", pPlayer, wWalls, iItems);
+
 	delete[] Textures;
 	//Creating the buffer that contains every pixel that will
 	//be rendered to the screen (RGBA).
@@ -66,7 +69,7 @@ int main()
 	icon.loadFromFile("icone.png");
 	window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 	
-	rc::Scene sScene = rc::Scene(WIDTH, HEIGHT, "RC");
+	rc::Scene sScene(WIDTH, HEIGHT, "RC");
 	//Loop that stays open while the winodw is open, we put the gameplay code in here.
 	while (window.isOpen())
 	{

@@ -148,7 +148,7 @@ namespace geom {
 				break;
 			//Same but for the second line segment.
 			case FALLS_WITHIN_SECOND_LINE_SEGMENT:
-				p.exists = 0 <= u && u <= 1 && t_num * u_num >= 0;
+				p.exists = 0 <= u && u <= 1 && t >= 0;
 				break;
 		}
 		//Calculating the point's coordinates.

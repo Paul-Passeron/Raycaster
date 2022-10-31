@@ -10,7 +10,17 @@ RC_GAMEOBJECT.hpp
 #include "RC_GEOM.hpp"
 #include <math.h>
 #include <SFML/Graphics.hpp>
+#include <SFML/Window/Keyboard.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Image.hpp>
+
+
 namespace rc {
+
+	typedef enum GAMEOBJECT_TYPE {
+		WALL, //0
+		ITEM, //1
+	};
 	class GameObject {
 	private:
 		geom::point pPos = geom::point();
@@ -35,13 +45,43 @@ namespace rc {
 		GameObject(geom::point pPos_) {
 			vSetPos(pPos_);
 		}
-		GameObject(){}
+		GameObject() {}
+
+	};
+
+	class Renderable : public GameObject {
+	private:
+		int startHeight;
+		int Height;
+		int x;
 		
+	public:
+		GAMEOBJECT_TYPE t=ITEM;
+		Renderable(geom::point pPos_, sf::Image& iTexture_, int sh, int h, GAMEOBJECT_TYPE type, int fx) :GameObject(pPos_, iTexture_) {
+			startHeight = sh;
+			Height = h;
+			t = type;
+			x = fx;
+		}
+		Renderable() {
+			startHeight = 0;
+			Height = 0;
+		}
+		float fGetHeight() {
+			return Height;
+		}
+		float fGetStartHeight() {
+			return startHeight;
+		}
+		int iGetX() {
+			return x;
+		}
 	};
 
 	class Wall : public GameObject {
 	private:
 		geom::line lWall;
+		float fSize = 1;
 	public:
 		void vSetWall(geom::line lWall_) {
 			lWall = lWall_;
@@ -50,7 +90,7 @@ namespace rc {
 			return lWall;
 		}
 
-		Wall(geom::point pPos_,sf::Image& iTexture_ , geom::line lL) : GameObject(pPos_, iTexture_) {
+		Wall(geom::point pPos_, sf::Image& iTexture_, geom::line lL) : GameObject(pPos_, iTexture_) {
 			vSetWall(lL);
 		}
 		Wall(geom::point pPos_, geom::line lL) : GameObject(pPos_) {
@@ -66,6 +106,35 @@ namespace rc {
 		Wall() {
 			vSetWall(geom::line());
 		}
+		Wall(geom::point pPos_, sf::Image& iTexture_, geom::line lL, float s) : GameObject(pPos_, iTexture_) {
+			vSetWall(lL);
+			fSize = s;
+		}
+		Wall(geom::point pPos_, geom::line lL, float s) : GameObject(pPos_) {
+			vSetWall(lL);
+			fSize = s;
+
+		}
+		Wall(sf::Image& iTexture_, geom::line lL, float s) : GameObject(geom::point(), iTexture_) {
+			vSetWall(lL);
+			fSize = s;
+
+
+		}
+		Wall(geom::line lL, float s) {
+			vSetWall(lL);
+			fSize = s;
+
+		}
+		Wall(float s) {
+			vSetWall(geom::line());
+			fSize = s;
+
+		}
+		float fGetSize() {
+			return fSize;
+		}
+
 	};
 	//Need to add Interactable wall class.
 	class Entity : public GameObject {
@@ -114,6 +183,7 @@ namespace rc {
 	private:
 		float fFov;
 		geom::line lCamera;
+		bool isInit = true;
 	public:
 		void vSetFov(float x) {
 			fFov = x;
@@ -135,13 +205,17 @@ namespace rc {
 			vSetFov(0);
 			geom::line lL = geom::line();
 			vSetCamera(lL);
+			isInit = false;
+		}
+		bool bGetIsInit() {
+			return isInit;
 		}
 	};
 	class Enemy : public Entity {
 	private:
 		bool isDead;
 	public:
-		Enemy(geom::point pP, float a, sf::Image& iTexture_):Entity(pP, iTexture_, 0, a) {
+		Enemy(geom::point pP, float a, sf::Image& iTexture_) :Entity(pP, iTexture_, 0, a) {
 			vSetTexture(iTexture_);
 		}
 		Enemy() {}
@@ -156,13 +230,13 @@ namespace rc {
 		float fGetSize() {
 			return size;
 		}
-		Item(geom::point pP, sf::Image iTexture_, float x):GameObject(pP, iTexture_) {
+		Item(geom::point pP, sf::Image iTexture_, float x) :GameObject(pP, iTexture_) {
 			vSetSize(x);
 		}
-		Item(geom::point pP, sf::Image iTexture_):GameObject(pP, iTexture_) {
+		Item(geom::point pP, sf::Image iTexture_) :GameObject(pP, iTexture_) {
 			vSetSize(1);
 		}
-		Item(geom::point pP, float x):GameObject(pP) {
+		Item(geom::point pP, float x) :GameObject(pP) {
 			vSetSize(x);
 		}
 		Item(float x) {
@@ -173,7 +247,7 @@ namespace rc {
 			vSetSize(1);
 		}
 	};
-	
+
 	class Collectible : public Item {
 	private:
 		bool bIsCollected;
@@ -198,6 +272,8 @@ namespace rc {
 		int iWidth;
 		int iHeight;
 		const char* sTitle;
+		sf::RenderWindow window;
+
 	public:
 		void vSetWidth(int x) {
 			iWidth = x;
@@ -223,8 +299,21 @@ namespace rc {
 			vSetTitle(s);
 		}
 		Scene() {
-			const char* s = "";
-			Scene(600, 600, "ss");
+			vSetHeight(600);
+			vSetWidth(600);
+			vSetTitle("");
+		}
+
+		void vInit() {
+			window.create(sf::VideoMode(iGetWidth(), iGetHeight()), sGetTitle());
+		}
+		void vSetIcon(std::string filePath) {
+			auto icon = sf::Image{};
+			icon.loadFromFile(filePath);
+			window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
+		}
+		bool bIsOpen() {
+			return window.isOpen();
 		}
 	};
 }
