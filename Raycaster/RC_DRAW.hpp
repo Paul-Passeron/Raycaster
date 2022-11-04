@@ -42,7 +42,7 @@ void drawScene(sf::RenderWindow& window, sf::Uint8*& pixels, sf::Texture& text, 
 	sprite.setTexture(text); // setting the sprite's texture as the texture containing our pixels.
 	window.clear(); //clearing the previous image.
 	window.draw(sprite); // drawing our pixels on the screen
-	window.display(); // displaying the result.
+	//window.display(); // displaying the result.
 }
 
 void vPlotPixel(sf::Uint8*& pixels, float fColorCoeff, sf::Color& col, int i, int h, int WIDTH, int HEIGHT) {
@@ -50,8 +50,8 @@ void vPlotPixel(sf::Uint8*& pixels, float fColorCoeff, sf::Color& col, int i, in
 	//Checking if pixel is in bounds.
 	if (index >= 0 && index < HEIGHT * WIDTH * 4 && col.a != 0) {
 		pixels[index] = col.r * fColorCoeff; // Red component
-			pixels[index + 1] = col.g* fColorCoeff; // Green component
-			pixels[index + 2] = col.b* fColorCoeff; // Blue component
+		pixels[index + 1] = col.g * fColorCoeff; // Green component
+		pixels[index + 2] = col.b * fColorCoeff; // Blue component
 		//pixels[index + 3] = 255; // Alpha component
 	}
 }
@@ -68,50 +68,61 @@ void vDrawObjectLine(float fWallHeight, float fHeight, sf::Image& text_wall, flo
 	================================================================
 	*/
 	int HEIGHT = (int)fHeight;
-	for (int h = start; h < start+fWallHeight; h++) {
+	for (int h = start + fWallHeight; h > start; h--) {
 		unsigned int y;// y is the y cordinate in texture space of the sampled pixel.
 		//Calculating the sample value of the pixel (a float number between 0 and 1
 		//indicating how high on the wall we are).
-		float fWallHeightSample = h-start;
+		float fWallHeightSample = h - start;
 		//Calculating the y value associated with the sampled float.
-		y = (fWallHeightSample / fWallHeight) * text_wall.getSize().y+1;
+		y = (1 - fWallHeightSample / fWallHeight) * text_wall.getSize().y + 1;
 		//Making sure the pixel is within boundaries.
 		if (y < 0) {
 			y = 0;
 		}
 		if (y >= text_wall.getSize().y) {
-			y = text_wall.getSize().y-1;
+			y = text_wall.getSize().y - 1;
 		}
 
 		sf::Color col = text_wall.getPixel(x, y);
-		vPlotPixel(pixels, fColorCoeff, col, i, h, WIDTH, HEIGHT);
+		vPlotPixel(pixels, fColorCoeff, col, i, HEIGHT - h, WIDTH, HEIGHT);
 	}
 }
 
 unsigned int iCalculateXSample(sf::Image text, geom::line lWall, geom::point inter) {
 	unsigned int x;
 	float fWallWidthSample = 1.0f / geom::inverse_distance(lWall.p2, inter);
-	x = (fWallWidthSample * text.getSize().x)-1;
+	x = (fWallWidthSample * text.getSize().x) - 1;
 	// It isn't equal to 0 because fWallWidthSample was a float so the result of the last line isn't necesarily a multiple of text.getSize().x.
-	return x % text.getSize().x;
+	if (text.getSize().x != 0)
+	{
+		return x % text.getSize().x;
+	}
 }
 
 
 geom::line lGetBillboardLine(rc::Item iItem, rc::Player pPlayer) {
-	geom::point pP1 = geom::point(iItem.pGetPos().x - 0.5*iItem.fGetSize() * pPlayer.fGetSinAngle(), iItem.pGetPos().y + 0.5*iItem.fGetSize() * pPlayer.fGetCosAngle());
-	geom::point pP2 = geom::point(iItem.pGetPos().x + 0.5*iItem.fGetSize() * pPlayer.fGetSinAngle(), iItem.pGetPos().y - 0.5*iItem.fGetSize() * pPlayer.fGetCosAngle());
+	geom::point pP1 = geom::point(iItem.pGetPos().x - 0.5 * iItem.fGetSize() * pPlayer.fGetSinAngle(), iItem.pGetPos().y + 0.5 * iItem.fGetSize() * pPlayer.fGetCosAngle());
+	geom::point pP2 = geom::point(iItem.pGetPos().x + 0.5 * iItem.fGetSize() * pPlayer.fGetSinAngle(), iItem.pGetPos().y - 0.5 * iItem.fGetSize() * pPlayer.fGetCosAngle());
+	return geom::line(pP2, pP1);
+
+}
+
+geom::line lGetBillboardLine(rc::Collectible iItem, rc::Player pPlayer) {
+	geom::point pP1 = geom::point(iItem.pGetPos().x - 0.5 * iItem.fGetSize() * pPlayer.fGetSinAngle(), iItem.pGetPos().y + 0.5 * iItem.fGetSize() * pPlayer.fGetCosAngle());
+	geom::point pP2 = geom::point(iItem.pGetPos().x + 0.5 * iItem.fGetSize() * pPlayer.fGetSinAngle(), iItem.pGetPos().y - 0.5 * iItem.fGetSize() * pPlayer.fGetCosAngle());
 	return geom::line(pP2, pP1);
 
 }
 
 
 
-bool operator >= (rc::Renderable& rR1, rc::Renderable& rR2) {	
+
+bool operator >= (rc::Renderable& rR1, rc::Renderable& rR2) {
 	return rR1.fGetStartHeight() >= rR2.fGetStartHeight();
 }
 
 void sort(std::vector<rc::Renderable>& rToRender) {
-	for (int i = 0; i <rToRender.size(); i++) {
+	for (int i = 0; i < rToRender.size(); i++) {
 		for (int j = 0; j <= i; j++) {
 			if (rToRender[i] >= rToRender[j]) {
 				std::swap(rToRender[i], rToRender[j]);
@@ -120,7 +131,7 @@ void sort(std::vector<rc::Renderable>& rToRender) {
 	}
 }
 
-void vDrawLoop(rc::Scene& sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWalls, std::vector<rc::Item> iItems, sf::Uint8*& pixels) {
+void vDrawLoop(rc::Scene& sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWalls, std::vector<rc::Item> iItems, std::vector<rc::Collectible> cCollectibles, sf::Uint8*& pixels) {
 
 	float fWidth = (float)sScene.iGetWidth();
 	float fHeight = (float)sScene.iGetHeight();
@@ -129,7 +140,7 @@ void vDrawLoop(rc::Scene& sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWa
 
 	int iWallsNumber = wWalls.size();
 	int iItemsNumber = iItems.size();
-
+	int iCollectibleNumber = cCollectibles.size();
 
 	for (int x = 0; x < sScene.iGetWidth(); x++) {
 
@@ -148,8 +159,9 @@ void vDrawLoop(rc::Scene& sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWa
 				//std::cout << iWallIndex << std::endl;
 				float fWallDist = geom::distance_point_line(pPlayer.lGetCamera(), pWallInter);
 				float fWallHeight = fRatio * fHeight / fWallDist;
+				int h = fWallHeight * 0.9;
 				int sh = (sScene.iGetHeight() - fWallHeight) / 2;
-				int h = fWallHeight;
+
 				sf::Image text = wWall.iGetTexture();
 				float xsample = iCalculateXSample(text, wWall.lGetWall(), pWallInter);
 				rc::Renderable rR = rc::Renderable(wWall.pGetPos(), text, sh, h, rc::WALL, xsample);
@@ -165,14 +177,32 @@ void vDrawLoop(rc::Scene& sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWa
 			if (pItemInter.exists) {
 				float fItemDist = geom::inverse_distance(pPlayer.pGetPos(), pItemInter);
 				float fItemRatio = iItem.fGetSize() * iItem.iGetTexture().getSize().y / iItem.iGetTexture().getSize().x;
-				float fInvDist = 0;
 				int temp = fRatio * fHeight * fItemDist;
-				int sh = (sScene.iGetHeight() - temp) / 2;
-				int h = temp*fItemRatio;
+				int sh = (sScene.iGetHeight() - temp * fItemRatio) / 2;
+				int h = temp * fItemRatio;
 				sf::Image text = iItem.iGetTexture();
 				float xsample = iCalculateXSample(text, lBillboardLine, pItemInter);
 				rc::Renderable rR = rc::Renderable(pItemInter, text, sh, h, rc::ITEM, xsample);
 				rToRender.push_back(rR);
+			}
+		}
+		//Collectibles
+		for (int iCollectibleIndex = 0; iCollectibleIndex < iCollectibleNumber; iCollectibleIndex++) {
+			rc::Collectible cCollectible = cCollectibles[iCollectibleIndex];
+			if (!cCollectible.bGetIsCollected()) {
+				geom::line lBillboardLine = lGetBillboardLine(cCollectible, pPlayer);
+				geom::point pCollectibleInter = geom::line_line_intersection(lRay, lBillboardLine, geom::FALLS_WITHIN_SECOND_LINE_SEGMENT);
+				if (pCollectibleInter.exists) {
+					float fItemDist = geom::inverse_distance(pPlayer.pGetPos(), pCollectibleInter);
+					float fItemRatio = cCollectible.iGetTexture().getSize().y / cCollectible.iGetTexture().getSize().x;
+					int temp = fRatio * fHeight * fItemDist;
+					int sh = (sScene.iGetHeight() - temp * fItemRatio) / 2;
+					int h = temp * fItemRatio;
+					sf::Image text = cCollectible.iGetTexture();
+					float xsample = iCalculateXSample(text, lBillboardLine, pCollectibleInter);
+					rc::Renderable rR = rc::Renderable(pCollectibleInter, text, sh, h, rc::WALL, xsample);
+					rToRender.push_back(rR);
+				}
 			}
 		}
 		//Sorting rRToRender
@@ -189,10 +219,14 @@ void vDrawLoop(rc::Scene& sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWa
 			rc::Renderable rR = rToRender[i];
 			sf::Image text = rR.iGetTexture();
 			unsigned int xsample = rR.iGetX();
-			vDrawObjectLine(rR.fGetHeight(), fHeight, text, 1, xsample, x, pixels, (int)fWidth, rR.fGetStartHeight());
+			float fcolorcoeff = rR.fGetHeight() / fHeight * 4.0f;
+			if (fcolorcoeff > 1) {
+				fcolorcoeff = 1.0f;
+			}
+			vDrawObjectLine(rR.fGetHeight(), fHeight, text, fcolorcoeff, xsample, x, pixels, (int)fWidth, rR.fGetStartHeight());
 		}
 	}
-	
+
 
 }
 

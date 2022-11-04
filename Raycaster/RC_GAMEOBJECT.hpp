@@ -54,19 +54,21 @@ namespace rc {
 		int startHeight;
 		int Height;
 		int x;
-		
+
 	public:
-		GAMEOBJECT_TYPE t=ITEM;
+		GAMEOBJECT_TYPE t = ITEM;
+		Renderable() {
+			startHeight = 0;
+			Height = 0;
+			x = 0;
+		}
 		Renderable(geom::point pPos_, sf::Image& iTexture_, int sh, int h, GAMEOBJECT_TYPE type, int fx) :GameObject(pPos_, iTexture_) {
 			startHeight = sh;
 			Height = h;
 			t = type;
 			x = fx;
 		}
-		Renderable() {
-			startHeight = 0;
-			Height = 0;
-		}
+
 		float fGetHeight() {
 			return Height;
 		}
@@ -185,6 +187,34 @@ namespace rc {
 		geom::line lCamera;
 		bool isInit = true;
 	public:
+		int nAmmo = 0;
+		bool bCanShoot;
+		bool bIsTimerActive;
+		float fPlayerTime;
+		float fMaxPlayerTime;
+		
+		void vOnTimerEnd() {
+			bCanShoot = true;
+		}
+
+		void vOnTimerStart() {
+			bCanShoot = false;
+		}
+		void vSetTimer(float max) {
+			bIsTimerActive = true;
+			fPlayerTime = 0;
+			fMaxPlayerTime = max;
+			vOnTimerStart();
+		}
+		void vUpdateTimer(float fElapsedTime) {
+			if (bIsTimerActive) {
+				fPlayerTime += fElapsedTime;
+			}
+			if (fPlayerTime > fMaxPlayerTime) {
+				bIsTimerActive = false;
+				vOnTimerEnd();
+			}
+		}
 		void vSetFov(float x) {
 			fFov = x;
 		}
@@ -200,12 +230,20 @@ namespace rc {
 		Player(geom::point pP, sf::Image iTexture_, float fAngle_, float fFov_, geom::line lL) : Entity(pP, iTexture_, 0, fAngle_) {
 			vSetFov(fFov_);
 			vSetCamera(lL);
+			nAmmo = 0;
+			bIsTimerActive = false;
+			bCanShoot = true;
+
 		}
 		Player() {
 			vSetFov(0);
 			geom::line lL = geom::line();
 			vSetCamera(lL);
 			isInit = false;
+			nAmmo = 0;
+			bIsTimerActive = false;
+			bCanShoot = true;
+
 		}
 		bool bGetIsInit() {
 			return isInit;
@@ -215,10 +253,14 @@ namespace rc {
 	private:
 		bool isDead;
 	public:
+		Enemy() {
+			isDead = false;
+		}
 		Enemy(geom::point pP, float a, sf::Image& iTexture_) :Entity(pP, iTexture_, 0, a) {
 			vSetTexture(iTexture_);
+			isDead = false;
 		}
-		Enemy() {}
+
 	};
 	class Item : public GameObject {
 	private:
@@ -242,10 +284,13 @@ namespace rc {
 		Item(float x) {
 			vSetSize(x);
 		}
-		Item(geom::point pP) : GameObject(pP) {}
 		Item() {
 			vSetSize(1);
 		}
+		Item(geom::point pP) : GameObject(pP) {
+			vSetSize(1);
+		}
+
 	};
 
 	class Collectible : public Item {
@@ -263,6 +308,19 @@ namespace rc {
 		}
 		Collectible(bool bB = false) {
 			vSetIsCollected(bB);
+		}
+		Collectible() {
+			vSetIsCollected(false);
+		}
+		void vUpdate(Player& pPlayer) {
+			//Function to be overriden by the user.
+			if (geom::distance_squared(pPlayer.pGetPos(), pGetPos()) < 1) {
+				bIsCollected = true;
+				std::cout << "Ammo Collected!";
+				pPlayer.nAmmo += 10;
+				std::cout << pPlayer.nAmmo << std::endl;
+			}
+
 		}
 	};
 	//Decoration is just an Item that isn't collectible -> Decoration is just Item.

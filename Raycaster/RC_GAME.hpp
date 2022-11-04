@@ -15,7 +15,30 @@ RC_GAME.hpp
 float proj_screen_width = 10.0f;
 
 
-void handleKeyboardInput(float fElapsedTime, rc::Player& pPlayer, float fOmega, float fSpeed) {
+void vShoot(rc::Player& pPlayer) {
+	if (!pPlayer.bIsTimerActive) {
+		if (!pPlayer.bCanShoot) {
+			pPlayer.vSetTimer(0.33);
+		}
+		else {
+			if (pPlayer.nAmmo > 0) {
+				pPlayer.bCanShoot = false;
+				pPlayer.nAmmo--;
+				std::cout << "Pow! ";
+				std::cout << pPlayer.nAmmo << std::endl;
+			}
+			else {
+				std::cout << "Not enough ammo!" << std::endl;
+			}
+		}
+	}
+}
+
+
+void handleKeyboardInput(float fElapsedTime, rc::Player& pPlayer, float fOmega, float fSpeed, int frameCounter) {
+	if (pPlayer.bIsTimerActive) {
+		pPlayer.vUpdateTimer(fElapsedTime);
+	}
 	/*
 	================================================================
 	handleKeyboardInput(float fElapsedTime, geom::player &pPlayer,
@@ -60,5 +83,7 @@ void handleKeyboardInput(float fElapsedTime, rc::Player& pPlayer, float fOmega, 
 		pP.y = pPlayer.pGetPos().y - cosf(pPlayer.fGetAngle()) * fElapsedTime * fSpeed;
 		pPlayer.vSetPos(pP);
 	}
-	
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+		vShoot(pPlayer);
+	}
 }

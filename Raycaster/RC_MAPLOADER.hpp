@@ -12,16 +12,18 @@ RC_MAPLOADER.cpp
 #include <sstream>
 #include "RC_GAMEOBJECT.hpp"
 
-void vParseFile(sf::Image*& iTexts, std::string sFileToLoad, rc::Player& pPlayer, std::vector<rc::Wall> &wWalls, std::vector<rc::Item>& iItems) {
+void vParseFile(sf::Image*& iTexts, std::string sFileToLoad, rc::Player& pPlayer, std::vector<rc::Wall> &wWalls, std::vector<rc::Item>& iItems, std::vector<rc::Collectible>& cCollectibles) {
 	std::fstream fileStream;
 	fileStream.open(sFileToLoad);
 	bool bInWall = false;
 	bool bInItem = false;
 	bool bInPlayer = false;
+	bool bInCollectible = false;
 	while (fileStream) {
 		std::string line;
 		std::getline(fileStream, line, '\n');
 		if (line[0] != '#' || line[1] != ':') {
+
 			if (line == "#WBEGIN") {
 				bInWall = true;
 			}
@@ -40,7 +42,13 @@ void vParseFile(sf::Image*& iTexts, std::string sFileToLoad, rc::Player& pPlayer
 			else if (line == "#PEND") {
 				bInPlayer = false;
 			}
-
+			else if (line == "#CBEGIN") {
+				std::cout << "Pol1" << std::endl;
+				bInCollectible = true;
+			}
+			else if (line == "#CEND") {
+				bInCollectible = false;
+			}
 			else if (bInWall) {
 				float fX1, fX2, fX3, fX4;
 				int iTextIdentifier;
@@ -48,31 +56,18 @@ void vParseFile(sf::Image*& iTexts, std::string sFileToLoad, rc::Player& pPlayer
 				if (ssin.good()) {
 					ssin >> fX1;
 				}
-				/*if (ssin.good()) {
-					ssin.ignore(' ');
-				}*/
 				if (ssin.good()) {
 					ssin >> fX2;
 				}
-				/*if (ssin.good()) {
-					ssin.ignore(' ');
-				}*/
 				if (ssin.good()) {
 					ssin >> fX3;
 				}
-				/*if (ssin.good()) {
-					ssin.ignore(' ');
-				}*/
 				if (ssin.good()) {
 					ssin >> fX4;
 				}
-				/*if (ssin.good()) {
-					ssin.ignore(' ');
-				}*/
 				if (ssin.good()) {
 					ssin >> iTextIdentifier;
 				}
-				std::cout << fX1 << " " << fX2 << " " << fX3 << " " << fX4 << " " << iTextIdentifier << std::endl;
 				geom::point pP1(fX1, fX2);
 				geom::point pP2(fX3, fX4);
 				geom::line lL(pP1, pP2);
@@ -86,21 +81,12 @@ void vParseFile(sf::Image*& iTexts, std::string sFileToLoad, rc::Player& pPlayer
 				if (ssin.good()) {
 					ssin >> fX1;
 				}
-				/*if (ssin.good()) {
-					ssin.ignore(' ');
-				}*/
 				if (ssin.good()) {
 					ssin >> fX2;
 				}
-				/*if (ssin.good()) {
-					ssin.ignore(' ');
-				}*/
 				if (ssin.good()) {
 					ssin >> fX3;
 				}
-				/*if (ssin.good()) {
-					ssin.ignore(' ');
-				}*/
 				if (ssin.good()) {
 					ssin >> iTextIdentifier;
 				}
@@ -115,14 +101,28 @@ void vParseFile(sf::Image*& iTexts, std::string sFileToLoad, rc::Player& pPlayer
 				if (ssin.good()) {
 					ssin >> fX1;
 				}
-				/*if (ssin.good()) {
-					ssin.ignore(' ');
-				}*/
 				if (ssin.good()) {
 					ssin >> fX2;
 				}
 				geom::point pP(fX1, fX2);
 				pPlayer.vSetPos(pP);
+			}
+			else if (bInCollectible) {
+				float fX1, fX2;
+				int iTextIdentifier;
+				std::stringstream ssin(line);
+				if (ssin.good()) {
+					ssin >> fX1;
+				}
+				if (ssin.good()) {
+					ssin >> fX2;
+				}
+				if (ssin.good()) {
+					ssin >> iTextIdentifier;
+				}
+				geom::point pP1(fX1, fX2);
+				rc::Collectible cCollectible(pP1, iTexts[iTextIdentifier], false);
+				cCollectibles.push_back(cCollectible);
 			}
 		}
 	}
