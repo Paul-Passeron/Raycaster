@@ -141,6 +141,7 @@
     <ClCompile Include="RC_MAIN.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RC_ANIMATIONPLAYER.hpp" />
     <ClInclude Include="RC_GAMEOBJECT.hpp" />
     <ClInclude Include="RC_DRAW.hpp" />
     <ClInclude Include="RC_GEOM.hpp" />

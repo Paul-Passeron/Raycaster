@@ -14,12 +14,14 @@ RC_MAIN.cpp
 #include <iostream>
 #include <chrono>
 #include <algorithm>
+#include <string>
 
 #include "RC_MATH.hpp"
 #include "RC_GEOM.hpp"
 #include "RC_GAME.hpp"
 #include "RC_GAMEOBJECT.hpp"
 #include "RC_MAPLOADER.hpp"
+#include "RC_ANIMATIONPLAYER.hpp"
 
 const char* TITLE = "Raycaster Engine"; //Window title
 const int WIDTH = 1920 / 4; //Window width
@@ -36,16 +38,8 @@ sf::Sprite sprite; // Sprite that will be displayed on the screen.
 
 int main()
 {
-
 	int frameCounter = 0;
 
-	sf::Texture gunText;
-	gunText.loadFromFile("gun.png");
-	sf::Sprite gun;
-	gun.setTexture(gunText);
-	float fGunScale = 3.2;
-	gun.scale(sf::Vector2f(fGunScale, fGunScale));
-	gun.setPosition(sf::Vector2f(WIDTH / 2 - 10 * fGunScale, HEIGHT - 21 * fGunScale));
 
 	sf::Image iWallText0;
 	iWallText0.loadFromFile("W3d_finalgrayhit1.png");
@@ -66,8 +60,23 @@ int main()
 	std::vector<rc::Item> iItems;
 	std::vector<rc::Collectible> cCollectibles;
 
+	sf::Image img0;
+	sf::Image img1;
+	sf::Image img2;
+	sf::Image img3;
+	sf::Image img4;
+	img0.loadFromFile("0.png");
+	img1.loadFromFile("1.png");
+	img2.loadFromFile("2.png");
+	img3.loadFromFile("3.png");
+	img4.loadFromFile("4.png");
+	std::vector<sf::Image> iGunImages = { img0, img1, img2, img3, img4 };
+	anim::AnimationPlayer aShoot(iGunImages, 0.33f);
+
 	rc::Player pPlayer = rc::Player(geom::point(0, 0), sf::Image(), 0.0f, fov, geom::line());
 	vParseFile(Textures, "RC_MAP.rcmap", pPlayer, wWalls, iItems, cCollectibles);
+	pPlayer.aShoot = aShoot;
+
 
 	delete[] Textures;
 	//Creating the buffer that contains every pixel that will
@@ -142,7 +151,13 @@ int main()
 		if (ftime > 2 * PI) {
 			ftime = 0;
 		}
-		gun.setPosition(sf::Vector2f(WIDTH / 2 - 10 * fGunScale, HEIGHT - 21 * fGunScale));
+		sf::Texture gunText;
+		gunText.loadFromImage(pPlayer.aShoot.iGetCurrentImage());
+		sf::Sprite gun;
+		gun.setTexture(gunText);
+		float fGunScale = 3.2;
+		gun.scale(sf::Vector2f(fGunScale, fGunScale));
+		gun.setPosition(sf::Vector2f(WIDTH / 2 - img0.getSize().x * fGunScale / 2, HEIGHT - img0.getSize().y * fGunScale));
 		window.draw(gun);
 		window.display();
 		frameCounter++;

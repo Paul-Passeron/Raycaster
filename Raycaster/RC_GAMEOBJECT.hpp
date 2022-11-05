@@ -13,7 +13,7 @@ RC_GAMEOBJECT.hpp
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Image.hpp>
-
+#include "RC_ANIMATIONPLAYER.hpp"
 
 namespace rc {
 
@@ -192,7 +192,9 @@ namespace rc {
 		bool bIsTimerActive;
 		float fPlayerTime;
 		float fMaxPlayerTime;
-		
+		anim::AnimationPlayer aShoot;
+
+
 		void vOnTimerEnd() {
 			bCanShoot = true;
 		}

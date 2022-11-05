@@ -22,6 +22,7 @@ void vShoot(rc::Player& pPlayer) {
 		}
 		else {
 			if (pPlayer.nAmmo > 0) {
+				pPlayer.aShoot.vSetIsPlaying(true);
 				pPlayer.bCanShoot = false;
 				pPlayer.nAmmo--;
 				std::cout << "Pow! ";
@@ -38,6 +39,9 @@ void vShoot(rc::Player& pPlayer) {
 void handleKeyboardInput(float fElapsedTime, rc::Player& pPlayer, float fOmega, float fSpeed, int frameCounter) {
 	if (pPlayer.bIsTimerActive) {
 		pPlayer.vUpdateTimer(fElapsedTime);
+	}
+	if (pPlayer.aShoot.bGetIsPlaying()) {
+		pPlayer.aShoot.updateT(fElapsedTime);
 	}
 	/*
 	================================================================
