@@ -37,7 +37,7 @@ namespace anim {
 		}
 		sf::Image iGetCurrentImage() {
 			unsigned int i = iImages.size() * fT / fLength;
-			std::cout << i << std::endl;
+			//std::cout << i << std::endl;
 			return iImages[i];
 		}
 		AnimationPlayer() {

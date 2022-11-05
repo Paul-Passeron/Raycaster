@@ -54,6 +54,7 @@ namespace rc {
 		int startHeight;
 		int Height;
 		int x;
+		int nSize;
 
 	public:
 		GAMEOBJECT_TYPE t = ITEM;

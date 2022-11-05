@@ -98,6 +98,16 @@ unsigned int iCalculateXSample(sf::Image text, geom::line lWall, geom::point int
 		return x % text.getSize().x;
 	}
 }
+unsigned int iCalculateXSample(sf::Image text, geom::line lWall, geom::point inter, float s) {
+	unsigned int x;
+	float fWallWidthSample = 1.0f / geom::inverse_distance(lWall.p2, inter)/s;
+	x = (fWallWidthSample * text.getSize().x) - 1;
+	// It isn't equal to 0 because fWallWidthSample was a float so the result of the last line isn't necesarily a multiple of text.getSize().x.
+	if (text.getSize().x != 0)
+	{
+		return x % text.getSize().x;
+	}
+}
 
 
 geom::line lGetBillboardLine(rc::Item iItem, rc::Player pPlayer) {
@@ -159,11 +169,11 @@ void vDrawLoop(rc::Scene& sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWa
 				//std::cout << iWallIndex << std::endl;
 				float fWallDist = geom::distance_point_line(pPlayer.lGetCamera(), pWallInter);
 				float fWallHeight = fRatio * fHeight / fWallDist;
-				int h = fWallHeight * 0.9;
+				int h = fWallHeight * 0.9 * wWall.fGetSize();
 				int sh = (sScene.iGetHeight() - fWallHeight) / 2;
 
 				sf::Image text = wWall.iGetTexture();
-				float xsample = iCalculateXSample(text, wWall.lGetWall(), pWallInter);
+				float xsample = iCalculateXSample(text, wWall.lGetWall(), pWallInter, wWall.fGetSize());
 				rc::Renderable rR = rc::Renderable(wWall.pGetPos(), text, sh, h, rc::WALL, xsample);
 				rToRender.push_back(rR);
 			}
@@ -219,7 +229,8 @@ void vDrawLoop(rc::Scene& sScene, rc::Player& pPlayer, std::vector<rc::Wall> wWa
 			rc::Renderable rR = rToRender[i];
 			sf::Image text = rR.iGetTexture();
 			unsigned int xsample = rR.iGetX();
-			float fcolorcoeff = rR.fGetHeight() / fHeight * 4.0f;
+			float fh = -rR.fGetStartHeight()*2 +sScene.iGetHeight();
+			float fcolorcoeff = fh / fHeight * 4.0f;
 			if (fcolorcoeff > 1) {
 				fcolorcoeff = 1.0f;
 			}

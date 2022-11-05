@@ -50,7 +50,7 @@ void vParseFile(sf::Image*& iTexts, std::string sFileToLoad, rc::Player& pPlayer
 				bInCollectible = false;
 			}
 			else if (bInWall) {
-				float fX1, fX2, fX3, fX4;
+				float fX1, fX2, fX3, fX4, fs;
 				int iTextIdentifier;
 				std::stringstream ssin(line);
 				if (ssin.good()) {
@@ -66,12 +66,15 @@ void vParseFile(sf::Image*& iTexts, std::string sFileToLoad, rc::Player& pPlayer
 					ssin >> fX4;
 				}
 				if (ssin.good()) {
+					ssin >> fs;
+				}
+				if (ssin.good()) {
 					ssin >> iTextIdentifier;
 				}
 				geom::point pP1(fX1, fX2);
 				geom::point pP2(fX3, fX4);
 				geom::line lL(pP1, pP2);
-				rc::Wall wWall(iTexts[iTextIdentifier], lL);
+				rc::Wall wWall(iTexts[iTextIdentifier], lL, fs);
 				wWalls.push_back(wWall);
 			}
 			else if (bInItem) {

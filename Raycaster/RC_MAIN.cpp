@@ -24,8 +24,8 @@ RC_MAIN.cpp
 #include "RC_ANIMATIONPLAYER.hpp"
 
 const char* TITLE = "Raycaster Engine"; //Window title
-const int WIDTH = 1920 / 4; //Window width
-const int HEIGHT = 1080 / 4; //Window height
+const int WIDTH = 320; //Window width
+const int HEIGHT = 200; //Window height
 const float PI = 3.141592653589793f; //The constant pi, used extensively in calculations.
 float fov = 72.0f * PI / 180.0f; // The player's field of view, could become one of the player's struct field.
 const float fSpeed = 15.0f; // The speed at which the player moves (nothing fancy, no sliding / friction).
@@ -45,16 +45,19 @@ int main()
 	iWallText0.loadFromFile("W3d_finalgrayhit1.png");
 	sf::Image iWallText1;
 	iWallText1.loadFromFile("W3d_finalgraywallshade2.png");
-	sf::Image iItemText;
-	iItemText.loadFromFile("item0.png");
-	sf::Image iItem1Text;
-	iItem1Text.loadFromFile("item1.png");
+	sf::Image iWallText2;
+	iWallText2.loadFromFile("texture.png");
+	sf::Image iItemText0;
+	iItemText0.loadFromFile("item0.png");
+	sf::Image iItemText1;
+	iItemText1.loadFromFile("item1.png");
 
-	sf::Image* Textures = new sf::Image[4];
+	sf::Image* Textures = new sf::Image[5];
 	Textures[0] = iWallText0;
-	Textures[2] = iItemText;
 	Textures[1] = iWallText1;
-	Textures[3] = iItem1Text;
+	Textures[2] = iWallText2;
+	Textures[3] = iItemText0;
+	Textures[4] = iItemText1;
 
 	std::vector<rc::Wall> wWalls;
 	std::vector<rc::Item> iItems;
@@ -76,8 +79,13 @@ int main()
 	rc::Player pPlayer = rc::Player(geom::point(0, 0), sf::Image(), 0.0f, fov, geom::line());
 	vParseFile(Textures, "RC_MAP.rcmap", pPlayer, wWalls, iItems, cCollectibles);
 	pPlayer.aShoot = aShoot;
+	float fGunScale = 2;
 
-
+	sf::Texture gunText;
+	gunText.loadFromImage(pPlayer.aShoot.iGetCurrentImage());
+	sf::Sprite gun(gunText);
+	gun.scale(sf::Vector2f(fGunScale, fGunScale));
+	gun.setPosition(sf::Vector2f(WIDTH / 2 - img0.getSize().x * fGunScale / 2, HEIGHT - img0.getSize().y * fGunScale));
 	delete[] Textures;
 	//Creating the buffer that contains every pixel that will
 	//be rendered to the screen (RGBA).
@@ -151,15 +159,14 @@ int main()
 		if (ftime > 2 * PI) {
 			ftime = 0;
 		}
-		sf::Texture gunText;
+		
+		//gun.setTexture(gunText);
 		gunText.loadFromImage(pPlayer.aShoot.iGetCurrentImage());
-		sf::Sprite gun;
 		gun.setTexture(gunText);
-		float fGunScale = 3.2;
-		gun.scale(sf::Vector2f(fGunScale, fGunScale));
-		gun.setPosition(sf::Vector2f(WIDTH / 2 - img0.getSize().x * fGunScale / 2, HEIGHT - img0.getSize().y * fGunScale));
+		
 		window.draw(gun);
 		window.display();
+
 		frameCounter++;
 	}
 	return 0;

@@ -25,11 +25,6 @@ void vShoot(rc::Player& pPlayer) {
 				pPlayer.aShoot.vSetIsPlaying(true);
 				pPlayer.bCanShoot = false;
 				pPlayer.nAmmo--;
-				std::cout << "Pow! ";
-				std::cout << pPlayer.nAmmo << std::endl;
-			}
-			else {
-				std::cout << "Not enough ammo!" << std::endl;
 			}
 		}
 	}
